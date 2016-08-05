@@ -13,10 +13,11 @@ namespace nsChess {
     void place(const Chesscell& chessman, int x, int y);
     void move (const Coordinate& start,   const Coordinate& end);
 
+    void autoFill();
+
     Chesscell get(const Coordinate& position) const;
     std::vector<Chesscell> getChesscells() const;
-  private:
-    enum { Width = 8, Height = 8, Total = Width * Height };
+  private:    
     std::vector<Chesscell> mChesscells;
     int index(const Coordinate& pos) const;
   };

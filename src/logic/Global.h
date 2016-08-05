@@ -4,6 +4,7 @@
 namespace nsChess {
   enum Color { None, White, Black };
   enum Piece { Empty, Pawn, Knight, Bishop, Rook, Queen, King };
+  enum Size  { Width = 8, Height = 8, Total = Width * Height };
 
   class Coordinate {
   public:

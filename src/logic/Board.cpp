@@ -24,6 +24,29 @@ void Board::move(const Coordinate& start, const Coordinate& end) {
     }
 }
 
+void Board::autoFill() {
+    enum { a, b, c, d, e, f, g, h };
+    place(Chesscell(Rook   ,White) ,a ,0);
+    place(Chesscell(Knight ,White) ,b ,0);
+    place(Chesscell(Bishop ,White) ,c ,0);
+    place(Chesscell(Queen  ,White) ,d ,0);
+    place(Chesscell(King   ,White) ,e ,0);
+    place(Chesscell(Bishop ,White) ,f ,0);
+    place(Chesscell(Knight ,White) ,g ,0);
+    place(Chesscell(Rook   ,White) ,h ,0);
+    for (int i = 0; i < 8; ++i) place(Chesscell(Pawn, White), i, 1);
+    place(Chesscell(Rook   ,Black) ,a ,7);
+    place(Chesscell(Knight ,Black) ,b ,7);
+    place(Chesscell(Bishop ,Black) ,c ,7);
+    place(Chesscell(Queen  ,Black) ,d ,7);
+    place(Chesscell(King   ,Black) ,e ,7);
+    place(Chesscell(Bishop ,Black) ,f ,7);
+    place(Chesscell(Knight ,Black) ,g ,7);
+    place(Chesscell(Rook   ,Black) ,h ,7);
+    for (int i = 0; i < 8; ++i) place(Chesscell(Pawn, Black), i, 6);
+}
+
+
 
 Chesscell Board::get(const Coordinate& position) const {
     int pos = index(position);

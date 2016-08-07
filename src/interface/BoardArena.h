@@ -1,7 +1,8 @@
 #pragma once
 #include <vector>
 #include "oxygine-framework.h"
-#include <vector>
+
+#include "../logic/Board.h"
 
 using namespace oxygine;
 
@@ -18,22 +19,19 @@ public:
     void drawBlackCells();
     void drawChessmans();
 
+    void drawPiece(spSprite piece, int position);
+
     void free();
 
     spActor getView();
 
 
 private:
-
-    space* getSpace(const Point& pos, bool check = true);
-
     void update(const UpdateState& us);
 
     void touched(Event*);
+    nsChess::Board* mBoardModel;
 
     spSprite            mBoardArea;
-    space*              _selected;
-    spTween             _current;
-    std::vector<space>  _field;
     Point               _size;
 };

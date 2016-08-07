@@ -12,11 +12,8 @@ void chess_preinit() { }
 
 void chess_init() {
     //load xml file with resources definition
-    res.loadXML("resources.xml");
 
-    spSprite bg = new Sprite;
-    bg->setResAnim(res.getResAnim("bg"));
-    bg->attachTo(getStage());
+
 
     board.init(6, 5);
 

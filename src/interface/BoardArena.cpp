@@ -63,7 +63,8 @@ void Board::drawChessmans() {
             piece->addEventListener(TouchEvent::TOUCH_DOWN ,CLOSURE(this, &Board::onMouseDown));
             piece->addEventListener(TouchEvent::TOUCH_UP   ,CLOSURE(this, &Board::onMouseUp));
             pieces.push_back(piece);
-            //piece->setAnchor(piece->getAnchorX() - piece->getWidth(), piece->getAnchorY() - piece->getHeight());
+            piece->setAnchor(piece->getAnchorX() - piece->getWidth(),
+                             piece->getAnchorY() - piece->getHeight());
             piece->setResAnim(resources->getResAnim("pieces"), column, row);
             piece->setSize(60, 60);
             piece->setTouchEnabled(true);
@@ -129,9 +130,8 @@ void Board::onMouseDown(Event* event) {
 Vector2 Board::alignToGrid(Vector2 position) {
     Vector2 result;
 
-    int offsetY = 60;
-    result.x = floor(position.x / 60) * 60;
-    result.y = floor(position.y / 60) * 60 + offsetY;
+    result.x = floor((position.x + 30) / 60) * 60;
+    result.y = floor((position.y + 30) / 60) * 60;
     return result;
 }
 

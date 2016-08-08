@@ -10,28 +10,18 @@ public:
     Draggable drag;
 };
 
-Board::Board(): _size(0, 0) {
-
-}
-
-
 void Board::init(int w, int h) {
-    _size.x = w;
-    _size.y = h;
-
     spSprite mBoard = new ColorRectSprite();
 
     mBoardArea = new ColorRectSprite();
-
-    getStage()->addClickListener(CLOSURE(this, &Board::clicked));
-    getStage()->addEventListener(TouchEvent::CLICK, CLOSURE(this, &Board::moved));
+    pieces.resize(32);
 
     int x = getStage()->getWidth() / 2;
     int y = getStage()->getHeight() / 2;
     mBoardArea->setPosition(x, y);
     mBoardArea->setSize(x, x);
     mBoardArea->attachTo(mBoard);
-    mBoardArea->setColor(Color::Wheat);    
+    mBoardArea->setColor(Color::Wheat);
     mBoardArea->setTouchEnabled(false, true);
 
     Vector2 padding(mBoardArea->getSize() / 16);
@@ -70,13 +60,15 @@ void Board::drawChessmans() {
         }
         if (!(row < 0 && column < 0)) {
             spSprite piece = new DraggableSprite();
+            piece->addEventListener(TouchEvent::TOUCH_DOWN ,CLOSURE(this, &Board::onMouseDown));
+            piece->addEventListener(TouchEvent::TOUCH_UP   ,CLOSURE(this, &Board::onMouseUp));
+            pieces.push_back(piece);
+            //piece->setAnchor(piece->getAnchorX() - piece->getWidth(), piece->getAnchorY() - piece->getHeight());
             piece->setResAnim(resources->getResAnim("pieces"), column, row);
             piece->setSize(60, 60);
             piece->setTouchEnabled(true);
             drawPiece(piece, i);
-            printf("%d%d ", mBoardModel->getChesscells().at(i).piece(), mBoardModel->getChesscells().at(i).color());
         }
-
     }
 }
 
@@ -112,33 +104,43 @@ void Board::drawBlackCells() {
             blackCell->setPosition(posX, posY);
             blackCell->setColor(Color::Tan);
             blackCell->setTouchEnabled(false);
-            blackCell->attachTo(mBoardArea);            
+            blackCell->attachTo(mBoardArea);
         }
     }
 }
 
-
-void Board::update(const UpdateState& us) {
-    PointerState* ps = Input::instance.getTouchByIndex(1);
-    if( ps->isPressed()) {
-        Vector2 pos = ps->getPosition();
+void Board::doUpdate(const UpdateState& us) {
+    log::messageln("update!");
+    for (int i = 0; i < pieces.size(); ++i) {
+        log::messageln("uppos %d %d ", pieces.at(i)->getX(), pieces.at(i)->getY());
     }
-}
-
-void Board::touched(Event* event) {
-
 }
 
 spActor Board::getView() {
     return mBoardArea;
 }
 
-void Board::clicked(Event* e) {
-    log::messageln("%d %d ", Input::instance.getTouchByIndex(1)->getPosition().x,
-                             Input::instance.getTouchByIndex(1)->getPosition().y);
+void Board::onMouseDown(Event* event) {
+    spActor actor = safeSpCast<Actor>(event->currentTarget);
+    spTween t = actor->addTween(Sprite::TweenColor(Color::LightGreen), 500, -1, true);
+    t->setName("color");
 }
 
-void Board::moved(Event* e) {
+Vector2 Board::alignToGrid(Vector2 position) {
+    Vector2 result;
+
+    int offsetY = 60;
+    result.x = floor(position.x / 60) * 60;
+    result.y = floor(position.y / 60) * 60 + offsetY;
+    return result;
+}
+
+void Board::onMouseUp(Event* event) {
+    spSprite actor = safeSpCast<Sprite>(event->currentTarget);
+    spTween t = actor->getTween("color", ep_ignore_error);
+    if (t) actor->removeTween(t);
+    actor->setColor(Color::White);
+    actor->setPosition(alignToGrid(actor->getPosition()));
 }
 
 void Board::free() {

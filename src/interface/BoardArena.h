@@ -11,10 +11,8 @@ struct space {
 
 };
 
-class Board {
+class Board : public Actor {
 public:
-    Board();
-
     void init(int w, int h);
     void drawBlackCells();
     void drawChessmans();
@@ -25,13 +23,14 @@ public:
 
     spActor getView();
 
-
 private:
-    void update(const UpdateState& us);
+    void doUpdate(const UpdateState& us);
+    void onMouseUp(Event* event);
+    void onMouseDown(Event* event);
+    Vector2 alignToGrid(Vector2 position);
 
-    void touched(Event*);
     nsChess::Board* mBoardModel;
 
-    spSprite            mBoardArea;
-    Point               _size;
+    spSprite mBoardArea;
+    std::vector<spSprite> pieces;
 };

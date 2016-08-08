@@ -1,11 +1,19 @@
 #include "BoardArena.h"
 
 #include "../logic/Global.h"
+#include "Draggable.h"
+#include "TweenOutline.h"
 
+class DraggableSprite : public Sprite {
+public:
+    DraggableSprite() { drag.init(this); }
+    Draggable drag;
+};
 
 Board::Board(): _size(0, 0) {
 
 }
+
 
 void Board::init(int w, int h) {
     _size.x = w;
@@ -13,8 +21,10 @@ void Board::init(int w, int h) {
 
     spSprite mBoard = new ColorRectSprite();
 
-
     mBoardArea = new ColorRectSprite();
+
+    getStage()->addClickListener(CLOSURE(this, &Board::clicked));
+    getStage()->addEventListener(TouchEvent::CLICK, CLOSURE(this, &Board::moved));
 
     int x = getStage()->getWidth() / 2;
     int y = getStage()->getHeight() / 2;
@@ -22,7 +32,7 @@ void Board::init(int w, int h) {
     mBoardArea->setSize(x, x);
     mBoardArea->attachTo(mBoard);
     mBoardArea->setColor(Color::Wheat);    
-
+    mBoardArea->setTouchEnabled(false, true);
 
     Vector2 padding(mBoardArea->getSize() / 16);
     mBoard->attachTo(getStage());
@@ -32,6 +42,8 @@ void Board::init(int w, int h) {
     drawBlackCells();
     drawChessmans();
 }
+
+
 
 void Board::drawChessmans() {
     mBoardModel = new nsChess::Board;
@@ -57,9 +69,10 @@ void Board::drawChessmans() {
         case King:   column = 0; break;
         }
         if (!(row < 0 && column < 0)) {
-            spSprite piece = new Sprite();
+            spSprite piece = new DraggableSprite();
             piece->setResAnim(resources->getResAnim("pieces"), column, row);
             piece->setSize(60, 60);
+            piece->setTouchEnabled(true);
             drawPiece(piece, i);
             printf("%d%d ", mBoardModel->getChesscells().at(i).piece(), mBoardModel->getChesscells().at(i).color());
         }
@@ -69,13 +82,12 @@ void Board::drawChessmans() {
 
 void Board::drawPiece(spSprite piece, int position) {
     using namespace nsChess;
-    int posX = position % Width;
-    int posY = position / Height;
+    int offsetX = position % Width;
+    int offsetY = position / Height;
     double coordX = mBoardArea->getX() - mBoardArea->getWidth();
     double coordY = coordX;
-    piece->setPosition(coordX + piece->getWidth() * posX, coordY + piece->getHeight() * posY);
-
-
+    piece->setPosition(coordX + piece->getWidth()  * offsetX,
+                       coordY + piece->getHeight() * offsetY);
     piece->attachTo(mBoardArea);
 }
 
@@ -99,6 +111,7 @@ void Board::drawBlackCells() {
 
             blackCell->setPosition(posX, posY);
             blackCell->setColor(Color::Tan);
+            blackCell->setTouchEnabled(false);
             blackCell->attachTo(mBoardArea);            
         }
     }
@@ -106,7 +119,10 @@ void Board::drawBlackCells() {
 
 
 void Board::update(const UpdateState& us) {
-
+    PointerState* ps = Input::instance.getTouchByIndex(1);
+    if( ps->isPressed()) {
+        Vector2 pos = ps->getPosition();
+    }
 }
 
 void Board::touched(Event* event) {
@@ -115,6 +131,14 @@ void Board::touched(Event* event) {
 
 spActor Board::getView() {
     return mBoardArea;
+}
+
+void Board::clicked(Event* e) {
+    log::messageln("%d %d ", Input::instance.getTouchByIndex(1)->getPosition().x,
+                             Input::instance.getTouchByIndex(1)->getPosition().y);
+}
+
+void Board::moved(Event* e) {
 }
 
 void Board::free() {

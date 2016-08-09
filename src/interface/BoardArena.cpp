@@ -135,6 +135,21 @@ void Board::onMouseDown(Event* event) {
     t->setName("color");
 }
 
+void Board::onMouseUp(Event* event) {
+    spSprite actor = safeSpCast<Sprite>(event->currentTarget);
+    spTween t = actor->getTween("color", ep_ignore_error);
+    if (t) actor->removeTween(t);
+    actor->setColor(Color::White);
+    actor->setPosition(alignToGrid(actor->getPosition()));
+
+    nsChess::Coordinate start = extractCoordinate(startPos);
+    nsChess::Coordinate end   = extractCoordinate(actor->getPosition());
+
+    mBoardModel->move(start, end);
+    drawChessmans();
+
+}
+
 Vector2 Board::alignToGrid(Vector2 position) {
     Vector2 result;
 
@@ -157,19 +172,6 @@ nsChess::Coordinate Board::extractCoordinate(Vector2 position) {
     return nsChess::Coordinate (position.x / cellWidth(), position.y / cellWidth());
 }
 
-void Board::onMouseUp(Event* event) {
-    spSprite actor = safeSpCast<Sprite>(event->currentTarget);
-    spTween t = actor->getTween("color", ep_ignore_error);
-    if (t) actor->removeTween(t);
-    actor->setColor(Color::White);
-    actor->setPosition(alignToGrid(actor->getPosition()));
-
-    nsChess::Coordinate start = extractCoordinate(startPos);
-    nsChess::Coordinate end   = extractCoordinate(actor->getPosition());
-
-    mBoardModel->move(start, end);
-    drawChessmans();
-}
 
 void Board::free() {
     mBoardArea->detach();

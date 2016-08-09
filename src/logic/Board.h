@@ -11,8 +11,9 @@ namespace nsChess {
   public:
     void place(const Chesscell& chessman, const Coordinate& pos);
     void place(const Chesscell& chessman, int x, int y);
-    void move (const Coordinate& start,   const Coordinate& end);
+    bool move(const Coordinate& start,   const Coordinate& end);
 
+    void print();
     void autoFill();
 
     Chesscell get(const Coordinate& position) const;
@@ -20,6 +21,7 @@ namespace nsChess {
   private:    
     std::vector<Chesscell> mChesscells;
     int index(const Coordinate& pos) const;
+    bool isWhiteMove;
   };
 }
 #endif // BOARD_H

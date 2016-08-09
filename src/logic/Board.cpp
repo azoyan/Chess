@@ -4,7 +4,7 @@
 #include <iostream>
 
 namespace nsChess {
-Board::Board() {
+Board::Board() : isWhiteMove(true) {
     mChesscells.resize(Total);
 }
 
@@ -16,12 +16,18 @@ void Board::place(const Chesscell& chessman, int x, int y) {
     place(chessman, Coordinate(x, y));
 }
 
-void Board::move(const Coordinate& start, const Coordinate& end) {
+bool Board::move(const Coordinate& start, const Coordinate& end) {
+    if (start == end) return false;
     Chesscell chessman = get(start);
     if (chessman.piece() != Empty) {
+        if ((chessman.color() == White) == isWhiteMove) {
         place(chessman, end);
         place(Chesscell(), start);
+        isWhiteMove = !isWhiteMove;
+        return true;
+        }
     }
+    return false;
 }
 
 void Board::autoFill() {
@@ -46,7 +52,15 @@ void Board::autoFill() {
     for (int i = 0; i < 8; ++i) place(Chesscell(Pawn, Black), i, 6);
 }
 
-
+void Board::print() {
+  int num = 1;
+  for (int i = 0; i < 64; ++i) {
+      if (0 == i % 8) printf("\n %d | ", num++);
+      nsChess::Chesscell ch = getChesscells().at(i);
+      printf("%d%d ", ch.piece(), ch.color());
+  }
+  printf("\n");
+}
 
 Chesscell Board::get(const Coordinate& position) const {
     int pos = index(position);

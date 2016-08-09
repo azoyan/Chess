@@ -15,7 +15,7 @@ void chess_init() {
 
 
 
-    board.init(6, 5);
+    board.init(6, 6);
 
     spActor view = board.getView();
     view->setPosition(getStage()->getSize() / 2 - view->getSize() / 2);

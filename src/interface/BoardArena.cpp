@@ -14,17 +14,24 @@ void Board::init(int w, int h) {
     spSprite mBoard = new ColorRectSprite();
 
     mBoardArea = new ColorRectSprite();
-    pieces.resize(32);
 
-    int x = getStage()->getWidth() / 2;
-    int y = getStage()->getHeight() / 2;
+    mBoardModel = new nsChess::Board;
+    mBoardModel->autoFill();
+    resources = new Resources;
+    resources->loadXML("/home/i/projects/c++/Chess/res/resurces.xml");
+
+    double x = getStage()->getWidth()  / 2;
+    double y = getStage()->getHeight() / 2;
     mBoardArea->setPosition(x, y);
     mBoardArea->setSize(x, x);
     mBoardArea->attachTo(mBoard);
     mBoardArea->setColor(Color::Wheat);
     mBoardArea->setTouchEnabled(false, true);
+    tmpPos = mBoardArea->getPosition();
+    printf("%f %f ", x, y);
+    tmpCorrector = 0;
 
-    Vector2 padding(mBoardArea->getSize() / 16);
+    Vector2 padding(mBoardArea->getSize() / (nsChess::Width + nsChess::Height));
     mBoard->attachTo(getStage());
     mBoard->setSize(mBoardArea->getSize() + padding);
     mBoard->setPosition(mBoardArea->getX() / 2 - 16, mBoardArea->getY() / 4 - 16);
@@ -33,14 +40,8 @@ void Board::init(int w, int h) {
     drawChessmans();
 }
 
-
-
 void Board::drawChessmans() {
-    mBoardModel = new nsChess::Board;
-    mBoardModel->autoFill();
-
-    Resources* resources = new Resources;
-    resources->loadXML("/home/i/projects/c++/Chess/res/resurces.xml");
+    cleanBoard();
 
     for (int i = 0; i < mBoardModel->getChesscells().size(); ++i) {
         using namespace nsChess;
@@ -61,26 +62,32 @@ void Board::drawChessmans() {
         if (!(row < 0 && column < 0)) {
             spSprite piece = new DraggableSprite();
             piece->addEventListener(TouchEvent::TOUCH_DOWN ,CLOSURE(this, &Board::onMouseDown));
-            piece->addEventListener(TouchEvent::TOUCH_UP   ,CLOSURE(this, &Board::onMouseUp));
+            piece->addEventListener(TouchEvent::TOUCH_UP   ,CLOSURE(this, &Board::onMouseUp));            
             pieces.push_back(piece);
-            piece->setAnchor(piece->getAnchorX() - piece->getWidth(),
-                             piece->getAnchorY() - piece->getHeight());
             piece->setResAnim(resources->getResAnim("pieces"), column, row);
-            piece->setSize(60, 60);
+            piece->setSize(mBoardArea->getSize() / nsChess::Width);
             piece->setTouchEnabled(true);
             drawPiece(piece, i);
+            }
         }
-    }
+    tmpCorrector++;
+    mBoardModel->print();
 }
 
 void Board::drawPiece(spSprite piece, int position) {
     using namespace nsChess;
-    int offsetX = position % Width;
-    int offsetY = position / Height;
+    double offsetX = position % Width;
+    double offsetY = position / Height;
     double coordX = mBoardArea->getX() - mBoardArea->getWidth();
     double coordY = coordX;
+    if (tmpCorrector) {
+        coordX += mBoardArea->getWidth() / 2;
+        coordY += mBoardArea->getHeight() / 2;
+    }
     piece->setPosition(coordX + piece->getWidth()  * offsetX,
                        coordY + piece->getHeight() * offsetY);
+
+    piece->setName("piece");
     piece->attachTo(mBoardArea);
 }
 
@@ -124,15 +131,30 @@ spActor Board::getView() {
 void Board::onMouseDown(Event* event) {
     spActor actor = safeSpCast<Actor>(event->currentTarget);
     spTween t = actor->addTween(Sprite::TweenColor(Color::LightGreen), 500, -1, true);
+    startPos  = actor->getPosition();
     t->setName("color");
 }
 
 Vector2 Board::alignToGrid(Vector2 position) {
     Vector2 result;
 
-    result.x = floor((position.x + 30) / 60) * 60;
-    result.y = floor((position.y + 30) / 60) * 60;
+    result.x = floor((position.x + cellWidth() / 2) / cellWidth()) * cellWidth();
+    result.y = floor((position.y + cellWidth() / 2) / cellWidth()) * cellWidth();
     return result;
+}
+
+void Board::cleanBoard() {
+    for (int i = 0; i < pieces.size(); ++i) mBoardArea->removeChild(mBoardArea->getChild("piece"));
+    pieces.clear();
+}
+
+
+double Board::cellWidth() {
+    return mBoardArea->getWidth() / nsChess::Width;
+}
+
+nsChess::Coordinate Board::extractCoordinate(Vector2 position) {
+    return nsChess::Coordinate (position.x / cellWidth(), position.y / cellWidth());
 }
 
 void Board::onMouseUp(Event* event) {
@@ -141,6 +163,12 @@ void Board::onMouseUp(Event* event) {
     if (t) actor->removeTween(t);
     actor->setColor(Color::White);
     actor->setPosition(alignToGrid(actor->getPosition()));
+
+    nsChess::Coordinate start = extractCoordinate(startPos);
+    nsChess::Coordinate end   = extractCoordinate(actor->getPosition());
+
+    mBoardModel->move(start, end);
+    drawChessmans();
 }
 
 void Board::free() {

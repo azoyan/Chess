@@ -29,8 +29,21 @@ private:
     void onMouseDown(Event* event);
     Vector2 alignToGrid(Vector2 position);
 
-    nsChess::Board* mBoardModel;
 
+    void cleanBoard();
+
+private:
+    double cellWidth();
+    nsChess::Coordinate extractCoordinate(Vector2 position);
+    Vector2 startPos;
+
+    int tmpCorrector;
+
+    nsChess::Board* mBoardModel;
+    Resources* resources;
+    spSprite mBoard;
     spSprite mBoardArea;
     std::vector<spSprite> pieces;
+    spSprite lay;
+    Vector2 tmpPos;
 };

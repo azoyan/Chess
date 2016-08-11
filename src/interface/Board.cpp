@@ -3,7 +3,6 @@
 #include "../logic/Global.h"
 #include "Draggable.h"
 #include "TweenOutline.h"
-#include "shared.h"
 
 class DraggableSprite : public Sprite {
 public:

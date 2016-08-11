@@ -19,17 +19,14 @@ src/main.cpp
 src/logic/Model.h
 src/logic/CellData.h
 src/logic/Global.h
-
 src/logic/Model.cpp
 src/logic/CellData.cpp
 
 src/interface/Board.h
 src/interface/Chess.h
-src/interface/shared.h
-
 src/interface/Board.cpp
 src/interface/Chess.cpp
-src/interface/shared.cpp
+
 )
 target_link_libraries(Chess ${OXYGINE_CORE_LIBS})
 

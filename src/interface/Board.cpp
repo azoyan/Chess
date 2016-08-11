@@ -19,8 +19,8 @@ void Board::init(int w, int h) {
     mModel->autoFill();
 
 
-    resources = new Resources;
-    resources->loadXML("/home/i/projects/c++/Chess/res/resurces.xml");
+    resources = new Resources();
+    resources->loadXML("../../data/resources.xml");
 
     touched = false;
     mView->setSize(getStage()->getWidth(), getStage()->getHeight());

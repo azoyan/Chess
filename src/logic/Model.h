@@ -8,7 +8,7 @@ namespace chess {
   namespace model {
     class Model {
     public:
-        Model();
+      Model();
     public:
       void place(const CellData& chessman, const Position& pos);
       void place(const CellData& chessman, int x, int y);
@@ -20,7 +20,7 @@ namespace chess {
       int to1d(const Position& pos) const;
       const std::vector<CellData> getCells() const;
     private:
-      CellData cellDataFrom(const Position &position) const;
+      CellData cellDataFrom(const Position& position) const;
     private:
       std::vector<CellData> mCells;
       bool isWhiteMove;

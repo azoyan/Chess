@@ -9,35 +9,33 @@
 #include "SDL_keyboard.h"
 
 using namespace oxygine;
+
 class PieceSprite : public Sprite {
 public:
     PieceSprite() { drag.init(this); }
     Draggable drag;
 };
 
-
 namespace chess {
-Board::Board()
-: mView    (new ColorRectSprite())
-, mModel   (new model::Model)
-, resources(new Resources())
-{
-    mModel->autoFill();
-    resources->loadXML("../../data/resources.xml");
-
-    oxygine::core::getDispatcher()->addEventListener(oxygine::core::EVENT_SYSTEM, CLOSURE(this, &Board::onEvent));
-
-    mTouched = false;
+  Board::Board()
+  : mView     (new ColorRectSprite())
+  , mModel    (new model::Model)
+  , mResources(new Resources())
+  , mTouched  (false)
+  {
+    mResources->loadXML("data/resources.xml");
     mView->setSize(getStage()->getWidth(), getStage()->getHeight());
     mView->setColor(Color::Wheat);
     mView->setTouchEnabled(false, true);
+    oxygine::core::getDispatcher()->addEventListener(oxygine::core::EVENT_SYSTEM
+                                                    ,CLOSURE(this, &Board::onEvent));
     createBlackCells();
     createChessmans();
-}
+  }
 
-void Board::createChessmans() {
-    cleanBoard();
-    for (int i = 0; i < mModel->getCells().size(); ++i) {
+  void Board::createChessmans() {
+      cleanBoard();
+      for (int i = 0; i < mModel->getCells().size(); ++i) {
         using namespace model;
         int row = -1;
         switch (mModel->getCells().at(i).color()) {
@@ -54,122 +52,115 @@ void Board::createChessmans() {
         case King:   column = 0; break;
         }
         if ((row >= 0 && column >= 0)) {
-            spSprite piece = new PieceSprite();
-            piece->addEventListener(TouchEvent::TOUCH_DOWN ,CLOSURE(this, &Board::onMouseDown));
-            piece->addEventListener(TouchEvent::TOUCH_UP   ,CLOSURE(this, &Board::onMouseUp));
-            pieces.push_back(piece);
-            piece->setResAnim(resources->getResAnim("pieces"), column, row);
-            piece->setSize(cellWidth(), cellWidth());
-            piece->setTouchEnabled(true);
-            createPiece(piece, i);
-            piece->setName("piece");
-            piece->attachTo(mView);
+          spSprite piece = new PieceSprite();
+          piece->addEventListener(TouchEvent::TOUCH_DOWN ,CLOSURE(this, &Board::onMouseDown));
+          piece->addEventListener(TouchEvent::TOUCH_UP   ,CLOSURE(this, &Board::onMouseUp));
+          pieces.push_back(piece);
+          piece->setResAnim(mResources->getResAnim("pieces"), column, row);
+          piece->setSize(cellWidth(), cellWidth());
+          piece->setTouchEnabled(true);
+          createPiece(piece, i);
+          piece->setName("piece");
+          piece->attachTo(mView);
         }
-    }
-}
+     }
+  }
 
-void Board::createPiece(spSprite piece, int position) {
+  void Board::createPiece(spSprite piece, int position) {
     double offsetX = position % model::Width;
     double offsetY = position / model::Height;
     piece->setPosition(mView->getX() + piece->getWidth()  * offsetX,
                        mView->getY() + piece->getHeight() * offsetY);
-}
+  }
 
-void Board::createBlackCells() {
+  void Board::createBlackCells() {
     for (int i = 0; i < model::Height; ++i) {
-        for (int j = 0; j < model::Width ; j += 2) {
-            bool black = true;
-            spSprite blackCell = new ColorRectSprite();
-            blackCell->setSize(cellWidth(), cellWidth());
+      for (int j = 0; j < model::Width ; j += 2) {
+        bool black = true;
+        spSprite blackCell = new ColorRectSprite();
+        blackCell->setSize(cellWidth(), cellWidth());
 
-            double posX = mView->getX() + blackCell->getWidth()  * i;
-            double posY = mView->getY() + blackCell->getHeight() * j;
+        double posX = mView->getX() + blackCell->getWidth()  * i;
+        double posY = mView->getY() + blackCell->getHeight() * j;
 
-            if (black && (i % model::Black)) {
-                posY += blackCell->getHeight();
-                black = !black;
-            }
-
-            blackCell->setPosition(posX, posY);
-            blackCell->setColor(Color::Tan);
-            blackCell->setTouchEnabled(false);
-            blackCell->attachTo(mView);
+        if (black && (i % model::Black)) {
+            posY += blackCell->getHeight();
+            black = !black;
         }
-    }
-}
 
-void Board::doUpdate(const UpdateState& us) {
-    const Uint8* data = SDL_GetKeyboardState(0);
-    if (data[SDL_SCANCODE_R]) {
-        mModel->clear();
-        mModel->autoFill();
+        blackCell->setPosition(posX, posY);
+        blackCell->setColor(Color::Tan);
+        blackCell->setTouchEnabled(false);
+        blackCell->attachTo(mView);
+      }
     }
+  }
+
+  void Board::doUpdate(const UpdateState& us) {
     if (!mTouched) createChessmans();
-}
+  }
 
-spActor Board::getView() {
+  spActor Board::getView() {
     return mView;
-}
+  }
 
-void Board::onMouseUp(Event* event) {
+  void Board::onMouseUp(Event* event) {
     spSprite actor = safeSpCast<Sprite>(event->currentTarget);
     spTween tween = actor->getTween("color", ep_ignore_error);
     if (tween) actor->removeTween(tween);
     actor->setColor(Color::White);
     actor->setPosition(alignToGrid(actor->getPosition()));
 
-    model::Position start = extractPosition(startPos);
+    model::Position start = extractPosition(mStartPos);
     model::Position end   = extractPosition(actor->getPosition());
     mModel->move(start, end);
     mModel->print();
     mTouched = false;
     mView->setCallbackDoUpdate(CLOSURE(this, &Board::doUpdate));
-}
+  }
 
-void Board::onMouseDown(Event* event) {
+  void Board::onMouseDown(Event* event) {
     spActor actor = safeSpCast<Actor>(event->currentTarget);
     spTween tween = actor->addTween(Sprite::TweenColor(Color::LightGreen), 500, -1, true);
-    startPos  = actor->getPosition();
+    mStartPos  = actor->getPosition();
     tween->setName("color");
     mTouched = true;
-}
+  }
 
-void Board::onEvent(Event* ev) {
+  void Board::onEvent(Event* ev) {
     SDL_Event* event = (SDL_Event*)ev->userData;
     if (event->type != SDL_KEYDOWN) return;
     switch (event->key.keysym.sym) {
     case SDLK_n:
-        mModel->clear();
-        mModel->autoFill();
-        break;
-    }
+      mModel->clear();
+      mModel->autoFill();
+      break;
+  }
 }
 
-
-Vector2 Board::alignToGrid(Vector2 position) {
+  Vector2 Board::alignToGrid(Vector2 position) {
     Vector2 result;
     result.x = floor((position.x + cellWidth() / 2) / cellWidth()) * cellWidth();
     result.y = floor((position.y + cellWidth() / 2) / cellWidth()) * cellWidth();
     return result;
-}
+  }
 
-void Board::cleanBoard() {
+  void Board::cleanBoard() {
     for (auto i : pieces) mView->removeChild(mView->getChild("piece"));
     pieces.clear();
-}
+  }
 
-double Board::cellWidth() {
+  double Board::cellWidth() {
     return mView->getWidth() / model::Width;
-}
+  }
 
-model::Position Board::extractPosition(Vector2 position) {
+  model::Position Board::extractPosition(Vector2 position) {
     return model::Position (position.x / cellWidth(), position.y / cellWidth());
-}
+  }
 
-
-void Board::free() {
+  void Board::free() {
     mView->detach();
     mView = 0;
-    resources->free();
-}
+    mResources->free();
+  }
 }

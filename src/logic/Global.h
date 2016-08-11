@@ -10,12 +10,12 @@ namespace chess {
     enum Rows { Eight, Seven, Six, Five, Four, Three, Two, One };
 
     struct Position {
-        Position(int x, int y) : x(x), y(y) { }
-        bool operator==(const Position& p) const {
-            return (x == p.x && y == p.y);
-        }
-        int x;
-        int y;
+      Position(int x, int y) : x(x), y(y) { }
+      bool operator==(const Position& p) const {
+          return (x == p.x && y == p.y);
+      }
+      int x;
+      int y;
     };
   }
 }

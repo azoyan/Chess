@@ -1,17 +1,17 @@
 #include "CellData.h"
 
 namespace chess {
-namespace model {
-CellData::CellData(Piece piece, Color color)
+  namespace model {
+    CellData::CellData(Piece piece, Color color)
     : mPiece(piece)
     , mColor(color) { }
 
-const Color CellData::color() const {
-    return mColor;
-}
+    const Color CellData::color() const {
+      return mColor;
+    }
 
-const Piece CellData::piece() const {
-    return mPiece;
-}
-}
+    const Piece CellData::piece() const {
+      return mPiece;
+    }
+  }
 }

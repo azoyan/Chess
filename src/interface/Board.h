@@ -27,9 +27,9 @@ namespace chess {
     void cleanBoard();
     double cellWidth();
   private:
-    oxygine::Vector2 startPos;
+    oxygine::Vector2 mStartPos;
     model::Model* mModel;
-    oxygine::Resources* resources;
+    oxygine::Resources* mResources;
     oxygine::spSprite mView;
     std::vector<oxygine::spSprite> pieces;
     bool mTouched;

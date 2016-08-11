@@ -53,7 +53,7 @@ void Board::drawChessmans() {
             piece->addEventListener(TouchEvent::TOUCH_DOWN ,CLOSURE(this, &Board::onMouseDown));
             piece->addEventListener(TouchEvent::TOUCH_UP   ,CLOSURE(this, &Board::onMouseUp));            
             pieces.push_back(piece);
-            piece->setResAnim(resources->getResAnim("pieces"), column, row);
+            piece->setResAnim(res.getResAnim("pieces"), column, row);
             piece->setSize(cellWidth(), cellWidth());
             piece->setTouchEnabled(true);
             drawPiece(piece, i);            

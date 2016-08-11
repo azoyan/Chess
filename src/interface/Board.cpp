@@ -4,6 +4,11 @@
 #include "Draggable.h"
 #include "TweenOutline.h"
 
+#include "core/oxygine.h"
+#include "SDL.h"
+#include "SDL_keyboard.h"
+
+
 class DraggableSprite : public Sprite {
 public:
     DraggableSprite() { drag.init(this); }
@@ -12,14 +17,14 @@ public:
 
 bool touched = false;
 namespace chess {
-void Board::init(int w, int h) {
+Board::Board() {
     mView = new ColorRectSprite();
     mModel = new model::Model;
     mModel->autoFill();
-
-
     resources = new Resources();
     resources->loadXML("../../data/resources.xml");
+
+    //oxygine::core::getDispatcher()->addEventListener(oxygine::core::EVENT_SYSTEM, CLOSURE(this, &Board::onEvent));
 
     touched = false;
     mView->setSize(getStage()->getWidth(), getStage()->getHeight());
@@ -50,16 +55,16 @@ void Board::drawChessmans() {
         if ((row >= 0 && column >= 0)) {
             spSprite piece = new DraggableSprite();
             piece->addEventListener(TouchEvent::TOUCH_DOWN ,CLOSURE(this, &Board::onMouseDown));
-            piece->addEventListener(TouchEvent::TOUCH_UP   ,CLOSURE(this, &Board::onMouseUp));            
+            piece->addEventListener(TouchEvent::TOUCH_UP   ,CLOSURE(this, &Board::onMouseUp));
             pieces.push_back(piece);
             piece->setResAnim(resources->getResAnim("pieces"), column, row);
             piece->setSize(cellWidth(), cellWidth());
             piece->setTouchEnabled(true);
-            drawPiece(piece, i);            
+            drawPiece(piece, i);
             piece->setName("piece");
             piece->attachTo(mView);
-            }
         }
+    }
 }
 
 void Board::drawPiece(spSprite piece, int position) {
@@ -93,6 +98,11 @@ void Board::drawBlackCells() {
 }
 
 void Board::doUpdate(const UpdateState& us) {
+    const Uint8* data = SDL_GetKeyboardState(0);
+    if (data[SDL_SCANCODE_R]) {
+        mModel->clear();
+        mModel->autoFill();
+    }
     if (!touched) drawChessmans();
 }
 
@@ -123,6 +133,17 @@ void Board::onMouseDown(Event* event) {
     touched = true;
 }
 
+void Board::onEvent(Event* ev) {
+    SDL_Event* event = (SDL_Event*)ev->userData;
+    if (event->type != SDL_KEYDOWN) return;
+    switch (event->key.keysym.sym) {
+    case SDLK_n:
+        mModel->clear();
+        mModel->autoFill();
+        break;
+    }
+}
+
 
 Vector2 Board::alignToGrid(Vector2 position) {
     Vector2 result;
@@ -135,7 +156,6 @@ void Board::cleanBoard() {
     for (auto i : pieces) mView->removeChild(mView->getChild("piece"));
     pieces.clear();
 }
-
 
 double Board::cellWidth() {
     return mView->getWidth() / model::Width;

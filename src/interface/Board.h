@@ -8,7 +8,7 @@ using namespace oxygine;
 namespace chess {
 class Board : public Actor {
 public:
-    void init(int w, int h);
+    Board();
     void free();
     spActor getView();
 
@@ -20,12 +20,12 @@ private:
     void doUpdate(const UpdateState& us);
     void onMouseUp(Event* event);
     void onMouseDown(Event* event);
+    void onEvent(Event* ev);
 
     model::Position extractPosition(Vector2 position);
     Vector2 alignToGrid(Vector2 position);
     void cleanBoard();
     double cellWidth();
-
 private:
     Vector2 startPos;
     model::Model* mModel;

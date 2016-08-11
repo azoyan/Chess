@@ -16,6 +16,7 @@ namespace model {
 
     void print();
     void autoFill();
+    void clear();
     std::vector<CellData> getCells() const;
   private:
     CellData cellDataFrom(const Position &position) const;

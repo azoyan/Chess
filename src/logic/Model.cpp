@@ -5,8 +5,8 @@
 
 namespace chess {
 namespace model {
-Model::Model() : isWhiteMove(true) {
-    mCells.resize(Total);
+Model::Model() : isWhiteMove(true) {    
+    clear();
     autoFill();
 }
 
@@ -53,6 +53,12 @@ void Model::autoFill() {
     place(CellData(Knight ,Black) ,G ,Eight);
     place(CellData(Rook   ,Black) ,H ,Eight);
     for (int i = 0; i < 8; ++i) place(CellData(Pawn, Black), i, Seven);
+}
+
+void Model::clear() {
+    isWhiteMove = true;
+    mCells.clear();
+    mCells.resize(Total);
 }
 
 void Model::print() {

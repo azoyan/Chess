@@ -6,11 +6,11 @@ CellData::CellData(Piece piece, Color color)
     : mPiece(piece)
     , mColor(color) { }
 
-Color CellData::color() {
+const Color CellData::color() const {
     return mColor;
 }
 
-Piece CellData::piece() {
+const Piece CellData::piece() const {
     return mPiece;
 }
 }

@@ -4,33 +4,35 @@
 
 #include "../logic/Model.h"
 
-using namespace oxygine;
+
 namespace chess {
-class Board : public Actor {
-public:
+  class Board : public oxygine::Actor {
+  public:
     Board();
     void free();
-    spActor getView();
+    oxygine::spActor getView();
 
-private:
-    void drawBlackCells();
-    void drawChessmans();
-    void drawPiece(spSprite piece, int position);
+  private:
+    void createBlackCells();
+    void createChessmans();
+    void createPiece(oxygine::spSprite piece, int position);
 
-    void doUpdate(const UpdateState& us);
-    void onMouseUp(Event* event);
-    void onMouseDown(Event* event);
-    void onEvent(Event* ev);
+    void doUpdate(const oxygine::UpdateState& us);
+    void onMouseUp(oxygine::Event* event);
+    void onMouseDown(oxygine::Event* event);
+    void onEvent(oxygine::Event* ev);
 
-    model::Position extractPosition(Vector2 position);
-    Vector2 alignToGrid(Vector2 position);
+    model::Position extractPosition(oxygine::Vector2 position);
+    oxygine::Vector2 alignToGrid(oxygine::Vector2 position);
     void cleanBoard();
     double cellWidth();
-private:
-    Vector2 startPos;
+  private:
+    oxygine::Vector2 startPos;
     model::Model* mModel;
-    Resources* resources;
-    spSprite mView;
-    std::vector<spSprite> pieces;
-};
+    oxygine::Resources* resources;
+    oxygine::spSprite mView;
+    std::vector<oxygine::spSprite> pieces;
+    bool mTouched;
+  };
 }
+

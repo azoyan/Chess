@@ -8,23 +8,26 @@ link_directories(${OXYGINE_LIBRARY_DIRS})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OXYGINE_CXX_FLAGS}")
 
+# set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -ggdb")
+
 add_executable(
 Chess
 
 src/main.cpp
 
-src/logic/Board.h
-src/logic/Chesscell.h
+src/logic/Model.h
+src/logic/CellData.h
 src/logic/Global.h
 
-src/logic/Board.cpp
-src/logic/Chesscell.cpp
+src/logic/Model.cpp
+src/logic/CellData.cpp
 
-src/interface/BoardArena.h
+src/interface/Board.h
 src/interface/Chess.h
 src/interface/shared.h
 
-src/interface/BoardArena.cpp
+src/interface/Board.cpp
 src/interface/Chess.cpp
 src/interface/shared.cpp
 )

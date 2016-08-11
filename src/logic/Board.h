@@ -1,13 +1,13 @@
-#ifndef BOARD_H
-#define BOARD_H
+#ifndef MODEL_H
+#define MODEL_H
 
 #include <vector>
 #include "Chesscell.h"
 
-namespace nsChess {
-  class Board {
+namespace model {
+  class Model {
   public:
-    Board();
+    Model();
   public:
     void place(const Chesscell& chessman, const Coordinate& pos);
     void place(const Chesscell& chessman, int x, int y);
@@ -24,4 +24,4 @@ namespace nsChess {
     bool isWhiteMove;
   };
 }
-#endif // BOARD_H
+#endif // MODEL_H

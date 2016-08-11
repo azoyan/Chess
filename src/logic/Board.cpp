@@ -3,20 +3,20 @@
 
 #include <iostream>
 
-namespace nsChess {
-Board::Board() : isWhiteMove(true) {
+namespace model {
+Model::Model() : isWhiteMove(true) {
     mChesscells.resize(Total);
 }
 
-void Board::place(const Chesscell& chessman, const Coordinate& pos) {
+void Model::place(const Chesscell& chessman, const Coordinate& pos) {
     mChesscells.at(index(pos)) = chessman;
 }
 
-void Board::place(const Chesscell& chessman, int x, int y) {
+void Model::place(const Chesscell& chessman, int x, int y) {
     place(chessman, Coordinate(x, y));
 }
 
-bool Board::move(const Coordinate& start, const Coordinate& end) {
+bool Model::move(const Coordinate& start, const Coordinate& end) {
     if (start == end) return false;
     Chesscell chessman = get(start);
     if (chessman.piece() != Empty) {
@@ -30,7 +30,7 @@ bool Board::move(const Coordinate& start, const Coordinate& end) {
     return false;
 }
 
-void Board::autoFill() {
+void Model::autoFill() {
     enum { a, b, c, d, e, f, g, h };
     place(Chesscell(Rook   ,White) ,a ,0);
     place(Chesscell(Knight ,White) ,b ,0);
@@ -52,7 +52,7 @@ void Board::autoFill() {
     for (int i = 0; i < 8; ++i) place(Chesscell(Pawn, Black), i, 6);
 }
 
-void Board::print() {
+void Model::print() {
   int num = 1;
   for (int i = 0; i < 64; ++i) {
       if (0 == i % 8) printf("\n %d | ", num++);
@@ -62,17 +62,17 @@ void Board::print() {
   printf("\n");
 }
 
-Chesscell Board::get(const Coordinate& position) const {
+Chesscell Model::get(const Coordinate& position) const {
     int pos = index(position);
     if ((0 < pos) && (Total > pos)) return mChesscells.at(pos);
     else                            return Chesscell();
 }
 
-std::vector<Chesscell> Board::getChesscells() const {
+std::vector<Chesscell> Model::getChesscells() const {
     return mChesscells;
 }
 
-int Board::index(const Coordinate& pos) const {
+int Model::index(const Coordinate& pos) const {
     return pos.x() + Height * pos.y();
 }
 

@@ -1,25 +1,23 @@
 #include "oxygine-framework.h"
 
-#include "BoardArena.h"
+#include "Board.h"
 #include "shared.h"
 
 using namespace oxygine;
 
 
-Board board;
+chess::Board board;
 
 void chess_preinit() { }
 
 void chess_init() {
     //load xml file with resources definition
-
-
-
-    board.init(6, 6);
-
+    board.init(2, 2);
+    res.loadXML("/home/i/projects/c++/Chess/res/resurces.xml");
     spActor view = board.getView();
-    view->setPosition(getStage()->getSize() / 2 - view->getSize() / 2);
+    view->setPosition(0, 0);
     getStage()->addChild(view);
+
 }
 
 void chess_destroy() {

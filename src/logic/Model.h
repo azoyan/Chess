@@ -34,7 +34,7 @@ namespace chess {
     private:
       std::vector<CellData> mCells;
       bool isWhiteMove;
-      std::stack<Snapshot> history;
+      std::stack<Snapshot> mSnapshots;
     };
   }
 }

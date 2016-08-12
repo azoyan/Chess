@@ -30,18 +30,18 @@ namespace chess {
           if (startCellData.piece() != Less) {
               place(startCellData, endPos);
               place(CellData(), startPos);
-              history.push({startPos, startCellData, endPos, endCellData});
+              mSnapshots.push({startPos, startCellData, endPos, endCellData});
               isWhiteMove = !isWhiteMove;
           }
       }
     }
 
     void Model::undo() {
-      if (!history.empty()) {
-        Snapshot s = history.top();
+      if (!mSnapshots.empty()) {
+        Snapshot s = mSnapshots.top();
         place(s.startData, s.startPos);
         place(s.endData, s.endPos);
-        history.pop();
+        mSnapshots.pop();
         isWhiteMove = !isWhiteMove;
       }
     }

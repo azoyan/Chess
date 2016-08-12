@@ -6,8 +6,8 @@
 namespace chess {
   namespace model {
     Model::Model() : isWhiteMove(true) {
-        clear();
-        autoFill();
+      clear();
+      autoFill();
     }
 
     void Model::place(const CellData& chessman, const Position &pos) {
@@ -30,8 +30,19 @@ namespace chess {
           if (startCellData.piece() != Less) {
               place(startCellData, endPos);
               place(CellData(), startPos);
+              history.push({startPos, startCellData, endPos, endCellData});
               isWhiteMove = !isWhiteMove;
           }
+      }
+    }
+
+    void Model::undo() {
+      if (!history.empty()) {
+        Snapshot s = history.top();
+        place(s.startData, s.startPos);
+        place(s.endData, s.endPos);
+        history.pop();
+        isWhiteMove = !isWhiteMove;
       }
     }
 

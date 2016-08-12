@@ -135,6 +135,9 @@ namespace chess {
       mModel->clear();
       mModel->autoFill();
       break;
+    case SDLK_LEFT:
+        mModel->undo();
+        break;
   }
 }
 

@@ -3,9 +3,18 @@
 
 #include <vector>
 #include "CellData.h"
+#include <stack>
 
 namespace chess {
   namespace model {
+
+  struct Snapshot {
+      Position startPos;
+      CellData startData;
+      Position endPos;
+      CellData endData;
+  };
+
     class Model {
     public:
       Model();
@@ -13,6 +22,7 @@ namespace chess {
       void place(const CellData& chessman, const Position& pos);
       void place(const CellData& chessman, int x, int y);
       void move(const Position& startPos,   const Position& endPos);
+      void undo();
 
       void print();
       void autoFill();
@@ -24,6 +34,7 @@ namespace chess {
     private:
       std::vector<CellData> mCells;
       bool isWhiteMove;
+      std::stack<Snapshot> history;
     };
   }
 }

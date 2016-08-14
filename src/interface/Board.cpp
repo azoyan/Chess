@@ -122,12 +122,13 @@ namespace chess {
 
   void Board::onEvent(Event* ev) {
     SDL_Event* event = (SDL_Event*)ev->userData;
-    if (event->type != SDL_KEYDOWN) return;
-    switch (event->key.keysym.sym) {
-    case SDLK_n    :mModel->autoFill(); break;
-    case SDLK_LEFT :mModel->undo();     break;
-    }
+    if (event->type == SDL_KEYDOWN) {
+      switch (event->key.keysym.sym) {
+      case SDLK_n    :mModel->autoFill(); break;
+      case SDLK_LEFT :mModel->undo();     break;
+      }
     createChessmans();
+    }
   }
 
   Vector2 Board::alignToGrid(Vector2 position) {

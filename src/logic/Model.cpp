@@ -5,8 +5,7 @@
 
 namespace chess {
   namespace model {
-    Model::Model() : isWhiteMove(true) {
-      clear();
+    Model::Model() : isWhiteMove(true) {     
       autoFill();
     }
 
@@ -47,6 +46,7 @@ namespace chess {
     }
 
     void Model::autoFill() {
+      clear();
       place(CellData(Rook   ,White) ,A ,One);
       place(CellData(Knight ,White) ,B ,One);
       place(CellData(Bishop ,White) ,C ,One);

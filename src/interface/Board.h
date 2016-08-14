@@ -17,7 +17,6 @@ namespace chess {
     void createChessmans();
     void createPiece(oxygine::spSprite piece, int position);
 
-    void doUpdate(const oxygine::UpdateState& us);
     void onMouseUp(oxygine::Event* event);
     void onMouseDown(oxygine::Event* event);
     void onEvent(oxygine::Event* ev);
@@ -32,7 +31,6 @@ namespace chess {
     oxygine::Resources* mResources;
     oxygine::spSprite mView;
     std::vector<oxygine::spSprite> pieces;
-    bool mTouched;
   };
 }
 

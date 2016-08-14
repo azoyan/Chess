@@ -21,7 +21,6 @@ namespace chess {
   : mView     (new ColorRectSprite())
   , mModel    (new model::Model)
   , mResources(new Resources())
-  , mTouched  (false)
   {
     mResources->loadXML("data/resources.xml");
     mView->setSize(getStage()->getWidth(), getStage()->getHeight());
@@ -96,10 +95,6 @@ namespace chess {
     }
   }
 
-  void Board::doUpdate(const UpdateState& us) {
-    if (!mTouched) createChessmans();
-  }
-
   spActor Board::getView() {
     return mView;
   }
@@ -115,31 +110,25 @@ namespace chess {
     model::Position end   = extractPosition(actor->getPosition());
     mModel->move(start, end);
     mModel->print();
-    mTouched = false;
-    mView->setCallbackDoUpdate(CLOSURE(this, &Board::doUpdate));
+    createChessmans();
   }
 
   void Board::onMouseDown(Event* event) {
     spActor actor = safeSpCast<Actor>(event->currentTarget);
     spTween tween = actor->addTween(Sprite::TweenColor(Color::LightGreen), 500, -1, true);
     mStartPos  = actor->getPosition();
-    tween->setName("color");
-    mTouched = true;
+    tween->setName("color");    
   }
 
   void Board::onEvent(Event* ev) {
     SDL_Event* event = (SDL_Event*)ev->userData;
     if (event->type != SDL_KEYDOWN) return;
     switch (event->key.keysym.sym) {
-    case SDLK_n:
-      mModel->clear();
-      mModel->autoFill();
-      break;
-    case SDLK_LEFT:
-        mModel->undo();
-        break;
+    case SDLK_n    :mModel->autoFill(); break;
+    case SDLK_LEFT :mModel->undo();     break;
+    }
+    createChessmans();
   }
-}
 
   Vector2 Board::alignToGrid(Vector2 position) {
     Vector2 result;

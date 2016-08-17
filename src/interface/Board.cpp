@@ -109,32 +109,29 @@ namespace chess {
     model::Position start = extractPosition(mStartPos);
     model::Position end   = extractPosition(actor->getPosition());
     mModel->move(start, end);
-    mModel->print();
     createChessmans();    
 
     while(mView->getChild("highlight").get() != nullptr) {
-        mView->removeChild(mView->getChild("highlight"));
+      mView->removeChild(mView->getChild("highlight"));
     }
 
   }
 
   void Board::onMouseDown(Event* event) {
     spActor actor = safeSpCast<Actor>(event->currentTarget);
-    spTween tween = actor->addTween(Sprite::TweenColor(Color::LightGreen), 500, -1, true);
     mStartPos  = actor->getPosition();
-    tween->setName("color");
     std::vector<model::Position> highlights = mModel->possibleMoves(extractPosition(mStartPos));
-    printf("size: %d", highlights.size());
+    if (!highlights.empty()) {
+      spTween tween = actor->addTween(Sprite::TweenColor(Color::LightGreen), 500, -1, true);
+      tween->setName("color");
+    }
+
     for (auto i : highlights) {
       spSprite highlight = new ColorRectSprite();
       highlight->setSize(actor->getWidth(), actor->getHeight());
-
-
       highlight->setColor(Color::LightGreen);
       highlight->setPosition(extractCoordinate(i).x, extractCoordinate(i).y);
-
       highlight->setAlpha(96);
-      printf("highlight :%f %f", highlight->getPosition().x, highlight->getPosition().y);
       highlight->setName("highlight");
       spTween tween = highlight->addTween(Sprite::TweenColor(Color::Green), 2500, -1, true);
       highlight->attachTo(mView);

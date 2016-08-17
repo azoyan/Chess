@@ -24,17 +24,22 @@ namespace chess {
       CellData endCellData = cellDataFrom(endPos);
       if (startCellData.color() == endCellData.color()) return;
 
+      std::vector<Position> positions = possibleMoves(startPos);
+      for (auto i : positions) {
+        if (i == endPos) {
+
       // xor. Если фигура белая и ход белых, или если черная и не ход белых
-      if ((startCellData.color() == White) == isWhiteMove) {
-          if (startCellData.piece() != Less) {
+          if ((startCellData.color() == White) == isWhiteMove) {
+            if (startCellData.piece() != Less) {
               place(startCellData, endPos);
               place(CellData(), startPos);
               mSnapshots.push({startPos, startCellData, endPos, endCellData});
               isWhiteMove = !isWhiteMove;
+            }
           }
+        }
       }
     }
-
     void Model::undo() {
       if (!mSnapshots.empty()) {
         Snapshot s = mSnapshots.top();
@@ -49,6 +54,7 @@ namespace chess {
       std::vector<Position> result;
       CellData chessman = cellDataFrom(position);
       Color ownColor = chessman.color();
+      if (ownColor == White && !isWhiteMove || ownColor == Black && isWhiteMove) return result;
       switch (chessman.piece()) {
       case Pawn:
       {

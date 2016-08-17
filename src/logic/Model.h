@@ -21,8 +21,9 @@ namespace chess {
     public:
       void place(const CellData& chessman, const Position& pos);
       void place(const CellData& chessman, int x, int y);
-      void move(const Position& startPos,   const Position& endPos);
+      void move(const Position& startPos,  const Position& endPos);
       void undo();
+      std::vector<Position> possibleMoves(const Position& position);
 
       void print();
       void autoFill();
@@ -31,6 +32,7 @@ namespace chess {
       const std::vector<CellData> getCells() const;
     private:
       CellData cellDataFrom(const Position& position) const;
+      CellData cellDataFrom(int x, int y) const;
     private:
       std::vector<CellData> mCells;
       bool isWhiteMove;

@@ -110,14 +110,35 @@ namespace chess {
     model::Position end   = extractPosition(actor->getPosition());
     mModel->move(start, end);
     mModel->print();
-    createChessmans();
+    createChessmans();    
+
+    while(mView->getChild("highlight").get() != nullptr) {
+        mView->removeChild(mView->getChild("highlight"));
+    }
+
   }
 
   void Board::onMouseDown(Event* event) {
     spActor actor = safeSpCast<Actor>(event->currentTarget);
     spTween tween = actor->addTween(Sprite::TweenColor(Color::LightGreen), 500, -1, true);
     mStartPos  = actor->getPosition();
-    tween->setName("color");    
+    tween->setName("color");
+    std::vector<model::Position> highlights = mModel->possibleMoves(extractPosition(mStartPos));
+    printf("size: %d", highlights.size());
+    for (auto i : highlights) {
+      spSprite highlight = new ColorRectSprite();
+      highlight->setSize(actor->getWidth(), actor->getHeight());
+
+
+      highlight->setColor(Color::LightGreen);
+      highlight->setPosition(extractCoordinate(i).x, extractCoordinate(i).y);
+
+      highlight->setAlpha(96);
+      printf("highlight :%f %f", highlight->getPosition().x, highlight->getPosition().y);
+      highlight->setName("highlight");
+      spTween tween = highlight->addTween(Sprite::TweenColor(Color::Green), 2500, -1, true);
+      highlight->attachTo(mView);
+    }
   }
 
   void Board::onEvent(Event* ev) {
@@ -147,9 +168,17 @@ namespace chess {
     return mView->getWidth() / model::Width;
   }
 
-  model::Position Board::extractPosition(Vector2 position) {
-    return model::Position (position.x / cellWidth(), position.y / cellWidth());
+  model::Position Board::extractPosition(const Vector2& position) {
+      return model::Position (position.x / cellWidth(), position.y / cellWidth());
   }
+
+  Vector2 Board::extractCoordinate(const model::Position &position) {
+      Vector2 result;
+      result.x = position.x * cellWidth();
+      result.y = position.y * cellWidth();
+      return result;
+  }
+
 
   void Board::free() {
     mView->detach();

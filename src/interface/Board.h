@@ -21,7 +21,8 @@ namespace chess {
     void onMouseDown(oxygine::Event* event);
     void onEvent(oxygine::Event* ev);
 
-    model::Position extractPosition(oxygine::Vector2 position);
+    model::Position extractPosition(const oxygine::Vector2& position);
+    oxygine::Vector2 extractCoordinate(const model::Position& position);
     oxygine::Vector2 alignToGrid(oxygine::Vector2 position);
     void cleanBoard();
     double cellWidth();

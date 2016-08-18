@@ -6,6 +6,16 @@
 
 
 namespace chess {
+class PieceSprite : public oxygine::Sprite {
+public:
+  PieceSprite() { drag.init(this); }
+   oxygine::Draggable drag;
+  model::Color getPieceColor() const { return mColor; }
+  void setPieceColor(model::Color color) { mColor = color; }
+private:
+  model::Color mColor;
+};
+
   class Board : public oxygine::Actor {
   public:
     Board();
@@ -13,9 +23,9 @@ namespace chess {
     oxygine::spActor getView();
 
   private:
-    void createBlackCells();
+    void colorizeCells();
     void createChessmans();
-    void createPiece(oxygine::spSprite piece, int position);
+    void createPiece(oxygine::intrusive_ptr<PieceSprite> piece, int position);
 
     void onMouseUp(oxygine::Event* event);
     void onMouseDown(oxygine::Event* event);
@@ -26,6 +36,7 @@ namespace chess {
     oxygine::Vector2 alignToGrid(oxygine::Vector2 position);
     void cleanBoard();
     double cellWidth();
+    double halfCellWidth();
   private:
     oxygine::Vector2 mStartPos;
     model::Model* mModel;

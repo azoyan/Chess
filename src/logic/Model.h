@@ -25,6 +25,10 @@ namespace chess {
       void undo();
       std::vector<Position> possibleMoves(const Position& position);
 
+      bool isWhiteMove;
+      bool canCastlingLeft;
+      bool canCastlingRight;
+
       void print();
       void autoFill();
       void clear();
@@ -34,8 +38,17 @@ namespace chess {
       CellData cellDataFrom(const Position& position) const;
       CellData cellDataFrom(int x, int y) const;
     private:
+      void insertPawnPossiblePositions(std::vector<Position>& result, const Position &position, Color ownColor);
+      void insertKnightPossiblePositions(std::vector<Position>& result, const Position &position, Color ownColor);
+      void insertBishopPossiblePositions(std::vector<Position>& result, const Position &position, Color ownColor);
+      void insertRookPossiblePositions(std::vector<Position>& result, const Position &position, Color ownColor);
+      void insertQueenPossiblePositions(std::vector<Position>& result, const Position &position, Color ownColor);
+      void insertKingPossiblePositions(std::vector<Position>& result, const Position &position, Color ownColor);
+      void insertPosition(std::vector<Position>& result, Position position, int directionX, int directionY, Color ownColor);
+      void attemptCastling(const CellData& startData, const Position& startPos, const Position& endPos);
+    private:
       std::vector<CellData> mCells;
-      bool isWhiteMove;
+
       std::stack<Snapshot> mSnapshots;
     };
   }

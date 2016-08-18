@@ -5,7 +5,11 @@
 
 namespace chess {
   namespace model {
-    Model::Model() : isWhiteMove(true) {     
+    Model::Model()
+    : isWhiteMove(true)
+    , canCastlingLeft(true)
+    , canCastlingRight(true)
+    {
       autoFill();
     }
 
@@ -31,8 +35,12 @@ namespace chess {
       // xor. Если фигура белая и ход белых, или если черная и не ход белых
           if ((startCellData.color() == White) == isWhiteMove) {
             if (startCellData.piece() != Less) {
+
+              attemptCastling(startCellData, startPos, endPos);
+
               place(startCellData, endPos);
               place(CellData(), startPos);
+              if (startCellData.piece() == Rook && startPos == Position(H, Eight)) canCastlingLeft = false;
               mSnapshots.push({startPos, startCellData, endPos, endCellData});
               isWhiteMove = !isWhiteMove;
             }
@@ -56,291 +64,15 @@ namespace chess {
       Color ownColor = chessman.color();
       if (ownColor == White && !isWhiteMove || ownColor == Black && isWhiteMove) return result;
       switch (chessman.piece()) {
-      case Pawn:
-      {
-        int direction = -1;
-        if (chessman.color() != White) direction = 1;
-        else direction = -1;
-
-        Position oneStepForward = Position(position.x, position.y + direction * 1);
-        if (cellDataFrom(oneStepForward).color() == None) {
-          result.push_back(oneStepForward);
-          bool firstPawnMove = position.y == Two || position.y == Seven;
-          Position twoStepForward = Position(position.x, position.y + direction * 2);
-          if (firstPawnMove && cellDataFrom(twoStepForward).color() == None) {
-            result.push_back(twoStepForward);
-          }
-        }
-
-        {
-          Position enemyPos(position.x + direction * 1, position.y + direction * 1);
-          CellData enemy = cellDataFrom(enemyPos);
-          if (enemy.color() != chessman.color() && enemy.color() != None) {
-            result.push_back(enemyPos);
-          }
-        }
-        {
-          Position enemyPos(position.x - direction * 1, position.y + direction * 1);
-          CellData enemy = cellDataFrom(enemyPos);
-          if (enemy.color() != chessman.color() && enemy.color() != None) {
-            result.push_back(enemyPos);
-          }
-        }
-        }
-
-
-      break;
-      case Knight:
-      {
-          std::vector<Position> positions =
-          {
-           Position(position.x + 1, position.y + 2)
-          ,Position(position.x - 1, position.y + 2)
-          ,Position(position.x + 1, position.y - 2)
-          ,Position(position.x - 1, position.y - 2)
-          ,Position(position.x + 2, position.y + 1)
-          ,Position(position.x - 2, position.y + 1)
-          ,Position(position.x + 2, position.y - 1)
-          ,Position(position.x - 2, position.y - 1)
-          };
-
-          for (auto i : positions) {
-              CellData enemy = cellDataFrom(i);
-              if (enemy.color() == None || enemy.color() != ownColor) {
-                  result.push_back(i);
-              }
-          }
-      }
-          break;
-      case Bishop:
-          for (int i = 1; i <= Width; ++i) {
-            Position p = Position(position.x + i, position.y + i);
-            CellData chessman = cellDataFrom(p);
-            Color color = chessman.color();
-            if (color == None) result.push_back(p);
-            else if (color != ownColor) {
-              result.push_back(p);
-              break;
-            }
-            else break;
-          }
-
-          for (int i = 1; i <= Width; ++i) {
-            Position p = Position(position.x - i, position.y + i);
-            CellData chessman = cellDataFrom(p);
-            Color color = chessman.color();
-            if (color == None) result.push_back(p);
-            else if (color != ownColor) {
-              result.push_back(p);
-              break;
-            }
-            else break;
-          }
-
-          for (int i = 1; i <= Width; ++i) {
-            Position p = Position(position.x + i, position.y - i);
-            CellData chessman = cellDataFrom(p);
-            Color color = chessman.color();
-            if (color == None) result.push_back(p);
-            else if (color != ownColor) {
-              result.push_back(p);
-              break;
-            }
-            else break;
-          }
-
-
-          for (int i = 1; i <= Width; ++i) {
-            Position p = Position(position.x - i, position.y - i);
-            CellData chessman = cellDataFrom(p);
-            Color color = chessman.color();
-            if (color == None) result.push_back(p);
-            else if (color != ownColor) {
-              result.push_back(p);
-              break;
-            }
-            else break;
-          }
-
-      break;
-
-      case Rook:
-          for (int i = 1; i <= Width; ++i) {
-            Position p = Position(position.x, position.y + i);
-            CellData chessman = cellDataFrom(p);
-            Color color = chessman.color();
-            if (color == None) result.push_back(p);
-            else if (color != ownColor) {
-              result.push_back(p);
-              break;
-            }
-            else break;
-          }
-
-        for (int i = 1; i <= Width; ++i) {
-          Position p = Position(position.x, position.y - i);
-          CellData chessman = cellDataFrom(p);
-          Color color = chessman.color();
-          if (color == None) result.push_back(p);
-          else if (color != ownColor) {
-            result.push_back(p);
-            break;
-          }
-          else break;
-        }
-
-        for (int i = 1; i <= Width; ++i) {
-          Position p = Position(position.x + i, position.y);
-          CellData chessman = cellDataFrom(p);
-          Color color = chessman.color();
-
-          if (color == None) result.push_back(p);
-          else if (color != ownColor) {
-            result.push_back(p);
-            break;
-          }
-          else break;
-        }
-
-        for (int i = 1; i <= Width; ++i) {
-          Position p = Position(position.x - i, position.y);
-          CellData chessman = cellDataFrom(p);
-          Color color = chessman.color();
-
-          if (color == None) result.push_back(p);
-          else if (color != ownColor) {
-            result.push_back(p);
-            break;
-          }
-          else break;
-        }
-        break;
-
-      case Queen:
-          for (int i = 1; i <= Width; ++i) {
-            Position p = Position(position.x, position.y + i);
-            CellData chessman = cellDataFrom(p);
-            Color color = chessman.color();
-            if (color == None) result.push_back(p);
-            else if (color != ownColor) {
-              result.push_back(p);
-              break;
-            }
-            else break;
-          }
-
-        for (int i = 1; i <= Width; ++i) {
-          Position p = Position(position.x, position.y - i);
-          CellData chessman = cellDataFrom(p);
-          Color color = chessman.color();
-          if (color == None) result.push_back(p);
-          else if (color != ownColor) {
-            result.push_back(p);
-            break;
-          }
-          else break;
-        }
-
-        for (int i = 1; i <= Width; ++i) {
-          Position p = Position(position.x + i, position.y);
-          CellData chessman = cellDataFrom(p);
-          Color color = chessman.color();
-
-          if (color == None) result.push_back(p);
-          else if (color != ownColor) {
-            result.push_back(p);
-            break;
-          }
-          else break;
-        }
-
-        for (int i = 1; i <= Width; ++i) {
-          Position p = Position(position.x - i, position.y);
-          CellData chessman = cellDataFrom(p);
-          Color color = chessman.color();
-
-          if (color == None) result.push_back(p);
-          else if (color != ownColor) {
-            result.push_back(p);
-            break;
-          }
-          else break;
-        }
-
-        for (int i = 1; i <= Width; ++i) {
-          Position p = Position(position.x + i, position.y + i);
-          CellData chessman = cellDataFrom(p);
-          Color color = chessman.color();
-          if (color == None) result.push_back(p);
-          else if (color != ownColor) {
-            result.push_back(p);
-            break;
-          }
-          else break;
-        }
-
-        for (int i = 1; i <= Width; ++i) {
-          Position p = Position(position.x - i, position.y + i);
-          CellData chessman = cellDataFrom(p);
-          Color color = chessman.color();
-          if (color == None) result.push_back(p);
-          else if (color != ownColor) {
-            result.push_back(p);
-            break;
-          }
-          else break;
-        }
-
-
-        for (int i = 1; i <= Width; ++i) {
-          Position p = Position(position.x + i, position.y - i);
-          CellData chessman = cellDataFrom(p);
-          Color color = chessman.color();
-          if (color == None) result.push_back(p);
-          else if (color != ownColor) {
-            result.push_back(p);
-            break;
-          }
-          else break;
-        }
-
-
-        for (int i = 1; i <= Width; ++i) {
-          Position p = Position(position.x - i, position.y - i);
-          CellData chessman = cellDataFrom(p);
-          Color color = chessman.color();
-          if (color == None) result.push_back(p);
-          else if (color != ownColor) {
-            result.push_back(p);
-            break;
-          }
-          else break;
-        }
-        break;
-
-      case King:
-          std::vector<Position> positions =
-          {
-           Position(position.x + 1, position.y + 0)
-          ,Position(position.x - 1, position.y + 0)
-          ,Position(position.x + 0, position.y + 1)
-          ,Position(position.x - 0, position.y - 1)
-          ,Position(position.x + 1, position.y + 1)
-          ,Position(position.x - 1, position.y + 1)
-          ,Position(position.x + 1, position.y - 1)
-          ,Position(position.x - 1, position.y - 1)
-          };
-
-          for (auto i : positions) {
-              CellData enemy = cellDataFrom(i);
-              if (enemy.color() == None || enemy.color() != ownColor) {
-                  result.push_back(i);
-              }
-          }
-          break;
+      case Pawn   :insertPawnPossiblePositions  (result, position, ownColor) ;break;
+      case Knight :insertKnightPossiblePositions(result, position, ownColor) ;break;
+      case Bishop :insertBishopPossiblePositions(result, position, ownColor) ;break;
+      case Rook   :insertRookPossiblePositions  (result, position, ownColor) ;break;
+      case Queen  :insertQueenPossiblePositions (result, position, ownColor) ;break;
+      case King   :insertKingPossiblePositions  (result, position, ownColor) ;break;
       return result;
     }
-    }
+  }
 
     void Model::autoFill() {
       clear();
@@ -389,7 +121,114 @@ namespace chess {
     }
 
     CellData Model::cellDataFrom(int x, int y) const {
-      return cellDataFrom(Position(x, y));
+        return cellDataFrom(Position(x, y));
+    }
+
+    void Model::insertPawnPossiblePositions(std::vector<Position> &result, const Position &position, Color ownColor) {
+      int direction = (ownColor != White) ? 1 : -1;
+
+      Position oneStepForward = Position(position.x, position.y + direction * 1);
+      if (cellDataFrom(oneStepForward).color() == None) {
+        result.push_back(oneStepForward);
+        bool firstPawnMove = position.y == Two || position.y == Seven;
+        Position twoStepForward = Position(position.x, position.y + direction * 2);
+        if (firstPawnMove && cellDataFrom(twoStepForward).color() == None) {
+          result.push_back(twoStepForward);
+        }
+      }
+
+      Position rightEnemyPos(position.x + direction * 1, position.y + direction * 1);
+      CellData rightEnemy = cellDataFrom(rightEnemyPos);
+      if (rightEnemy.color() != ownColor && rightEnemy.color() != None) {
+        result.push_back(rightEnemyPos);
+      }
+      Position leftEnemyPos(position.x - direction * 1, position.y + direction * 1);
+      CellData leftEnemy = cellDataFrom(leftEnemyPos);
+      if (leftEnemy.color() != ownColor && leftEnemy.color() != None) {
+        result.push_back(leftEnemyPos);
+      }
+    }
+
+    void Model::insertKnightPossiblePositions(std::vector<Position> &result, const Position &position, Color ownColor) {
+      std::vector<Position> positions = {
+       Position(position.x + 1, position.y + 2)
+      ,Position(position.x - 1, position.y + 2)
+      ,Position(position.x + 1, position.y - 2)
+      ,Position(position.x - 1, position.y - 2)
+      ,Position(position.x + 2, position.y + 1)
+      ,Position(position.x - 2, position.y + 1)
+      ,Position(position.x + 2, position.y - 1)
+      ,Position(position.x - 2, position.y - 1) };
+
+      for (auto i : positions) {
+        Color enemyColor = cellDataFrom(i).color();
+        if (enemyColor == None || enemyColor != ownColor) result.push_back(i);
+      }
+    }
+
+    void Model::insertBishopPossiblePositions(std::vector<Position>& result, const Position& position,Color ownColor) {
+      insertPosition(result, position,  1,  1, ownColor);
+      insertPosition(result, position, -1,  1, ownColor);
+      insertPosition(result, position,  1, -1, ownColor);
+      insertPosition(result, position, -1, -1, ownColor);
+    }
+
+    void Model::insertRookPossiblePositions(std::vector<Position>& result, const Position& position, Color ownColor) {
+      insertPosition(result, position,  0, 1, ownColor);
+      insertPosition(result, position,  0,-1, ownColor);
+      insertPosition(result, position,  1, 0, ownColor);
+      insertPosition(result, position, -1, 0, ownColor);
+    }
+
+    void Model::insertQueenPossiblePositions(std::vector<Position> &result, const Position &position, Color ownColor) {
+        insertBishopPossiblePositions(result, position, ownColor);
+        insertRookPossiblePositions(result, position, ownColor);
+    }
+
+    void Model::insertKingPossiblePositions(std::vector<Position> &result, const Position &position, Color ownColor) {
+      std::vector<Position> positions = {
+       Position(position.x + 1, position.y + 0)
+      ,Position(position.x - 1, position.y + 0)
+      ,Position(position.x + 0, position.y + 1)
+      ,Position(position.x - 0, position.y - 1)
+      ,Position(position.x + 1, position.y + 1)
+      ,Position(position.x - 1, position.y + 1)
+      ,Position(position.x + 1, position.y - 1)
+      ,Position(position.x - 1, position.y - 1)
+      };
+
+
+      Position castlingRight(position.x + 2, position.y);
+      Position castlingLeft(position.x - 2, position.y);
+      if (canCastlingRight && cellDataFrom(Position(position.x + 2, position.y)).piece() == Less) {
+        result.push_back(castlingRight);
+      }
+      if (canCastlingLeft && cellDataFrom(Position(position.x - 2, position.y)).piece() == Less) {
+        result.push_back(castlingLeft);
+      }
+
+      for (auto i : positions) {
+        CellData enemy = cellDataFrom(i);
+        if (enemy.color() == None || enemy.color() != ownColor) result.push_back(i);
+      }
+    }
+
+    void Model::insertPosition(std::vector<Position> &result, Position position, int directionX, int directionY, Color ownColor) {
+      for (int i = 1; i <= Width; ++i) {
+        Position p = Position(position.x + directionX * i, position.y + directionY * i);
+        CellData chessman = cellDataFrom(p);
+        Color color = chessman.color();
+        if (color == None) result.push_back(p);
+        else if (color != ownColor) {
+          result.push_back(p);
+          break;
+        }
+        else break;
+      }
+    }
+
+    void Model::attemptCastling(const CellData &startData, const Position &startPos, const Position &endPos) {
+
     }
 
     const std::vector<CellData> Model::getCells() const {

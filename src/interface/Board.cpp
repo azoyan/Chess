@@ -10,13 +10,10 @@
 
 using namespace oxygine;
 
-class PieceSprite : public Sprite {
-public:
-    PieceSprite() { drag.init(this); }
-    Draggable drag;
-};
 
 namespace chess {
+
+
   Board::Board()
   : mView     (new ColorRectSprite())
   , mModel    (new model::Model)
@@ -24,22 +21,23 @@ namespace chess {
   {
     mResources->loadXML("data/resources.xml");
     mView->setSize(getStage()->getWidth(), getStage()->getHeight());
-    mView->setColor(Color::Wheat);
+    mView->setColor(Color::Tan);
     mView->setTouchEnabled(false, true);
     oxygine::core::getDispatcher()->addEventListener(oxygine::core::EVENT_SYSTEM
                                                     ,CLOSURE(this, &Board::onEvent));
-    createBlackCells();
+    colorizeCells();
     createChessmans();
   }
 
   void Board::createChessmans() {
       cleanBoard();
+      model::Color color;
       for (int i = 0; i < mModel->getCells().size(); ++i) {
         using namespace model;
         int row = -1;
         switch (mModel->getCells().at(i).color()) {
-        case White: row = 1; break;
-        case Black: row = 0; break;
+        case White: row = 1; color = White; break;
+        case Black: row = 0; color = Black; break;
         }
         int column = -1;
         switch(mModel->getCells().at(i).piece()) {
@@ -51,28 +49,49 @@ namespace chess {
         case King:   column = 0; break;
         }
         if ((row >= 0 && column >= 0)) {
-          spSprite piece = new PieceSprite();
+          intrusive_ptr<PieceSprite> piece = new PieceSprite();
+
           piece->addEventListener(TouchEvent::TOUCH_DOWN ,CLOSURE(this, &Board::onMouseDown));
           piece->addEventListener(TouchEvent::TOUCH_UP   ,CLOSURE(this, &Board::onMouseUp));
           pieces.push_back(piece);
           piece->setResAnim(mResources->getResAnim("pieces"), column, row);
           piece->setSize(cellWidth(), cellWidth());
           piece->setTouchEnabled(true);
+          piece->setPieceColor(color);
           createPiece(piece, i);
           piece->setName("piece");
+
           piece->attachTo(mView);
-        }
+        }        
      }
   }
 
-  void Board::createPiece(spSprite piece, int position) {
+  void Board::createPiece(intrusive_ptr<PieceSprite> piece, int position) {
     double offsetX = position % model::Width;
     double offsetY = position / model::Height;
-    piece->setPosition(mView->getX() + piece->getWidth()  * offsetX,
-                       mView->getY() + piece->getHeight() * offsetY);
+    double width  = piece->getWidth();
+    double height = piece->getHeight();
+    piece->setPosition(mView->getX() + width  * offsetX,
+                       mView->getY() + height * offsetY);
+
+    bool isWhiteMove = mModel->isWhiteMove;
+    model::Color current = piece->getPieceColor();
+
+    bool isDraggable = current == model::White && isWhiteMove
+                    || current == model::Black && !isWhiteMove;
+
+    piece->drag.setDragEnabled(isDraggable);
+
+    if (isDraggable) {
+      spTweenQueue tweenQueue = new TweenQueue();
+      tweenQueue->add(Sprite::TweenRotationDegrees(-1), 100, 1, true);
+      tweenQueue->add(Sprite::TweenRotationDegrees( 1), 100, 1, true);
+      tweenQueue->setLoops(-1);
+      piece->addTween(tweenQueue);
+    }
   }
 
-  void Board::createBlackCells() {
+  void Board::colorizeCells() {
     for (int i = 0; i < model::Height; ++i) {
       for (int j = 0; j < model::Width ; j += 2) {
         bool black = true;
@@ -86,9 +105,8 @@ namespace chess {
             posY += blackCell->getHeight();
             black = !black;
         }
-
         blackCell->setPosition(posX, posY);
-        blackCell->setColor(Color::Tan);
+        blackCell->setColor(Color::Wheat);
         blackCell->setTouchEnabled(false);
         blackCell->attachTo(mView);
       }
@@ -105,6 +123,7 @@ namespace chess {
     if (tween) actor->removeTween(tween);
     actor->setColor(Color::White);
     actor->setPosition(alignToGrid(actor->getPosition()));
+    actor->setScale(1);
 
     model::Position start = extractPosition(mStartPos);
     model::Position end   = extractPosition(actor->getPosition());
@@ -114,7 +133,6 @@ namespace chess {
     while(mView->getChild("highlight").get() != nullptr) {
       mView->removeChild(mView->getChild("highlight"));
     }
-
   }
 
   void Board::onMouseDown(Event* event) {
@@ -122,15 +140,17 @@ namespace chess {
     mStartPos  = actor->getPosition();
     std::vector<model::Position> highlights = mModel->possibleMoves(extractPosition(mStartPos));
     if (!highlights.empty()) {
-      spTween tween = actor->addTween(Sprite::TweenColor(Color::LightGreen), 500, -1, true);
-      tween->setName("color");
+      //spTween tween = actor->addTween(Sprite::TweenColor(Color::LightGreen), 500, -1, true);
+      actor->setScale(1.1);
+      //tween->setName("color");
     }
 
     for (auto i : highlights) {
       spSprite highlight = new ColorRectSprite();
       highlight->setSize(actor->getWidth(), actor->getHeight());
       highlight->setColor(Color::LightGreen);
-      highlight->setPosition(extractCoordinate(i).x, extractCoordinate(i).y);
+      highlight->setPosition(extractCoordinate(i).x
+                            ,extractCoordinate(i).y);
       highlight->setAlpha(96);
       highlight->setName("highlight");
       spTween tween = highlight->addTween(Sprite::TweenColor(Color::Green), 2500, -1, true);
@@ -142,8 +162,8 @@ namespace chess {
     SDL_Event* event = (SDL_Event*)ev->userData;
     if (event->type == SDL_KEYDOWN) {
       switch (event->key.keysym.sym) {
-      case SDLK_n    :mModel->autoFill(); break;
-      case SDLK_LEFT :mModel->undo();     break;
+        case SDLK_n    :mModel->autoFill(); break;
+        case SDLK_LEFT :mModel->undo();     break;
       }
     createChessmans();
     }
@@ -151,8 +171,8 @@ namespace chess {
 
   Vector2 Board::alignToGrid(Vector2 position) {
     Vector2 result;
-    result.x = floor((position.x + cellWidth() / 2) / cellWidth()) * cellWidth();
-    result.y = floor((position.y + cellWidth() / 2) / cellWidth()) * cellWidth();
+    result.x = floor((position.x + halfCellWidth()) / cellWidth()) * cellWidth();
+    result.y = floor((position.y + halfCellWidth()) / cellWidth()) * cellWidth();
     return result;
   }
 
@@ -162,7 +182,11 @@ namespace chess {
   }
 
   double Board::cellWidth() {
-    return mView->getWidth() / model::Width;
+      return mView->getWidth() / model::Width;
+  }
+
+  double Board::halfCellWidth() {
+    return cellWidth() / 2.0;
   }
 
   model::Position Board::extractPosition(const Vector2& position) {

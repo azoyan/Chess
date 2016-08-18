@@ -12,8 +12,6 @@ using namespace oxygine;
 
 
 namespace chess {
-
-
   Board::Board()
   : mView     (new ColorRectSprite())
   , mModel    (new model::Model)

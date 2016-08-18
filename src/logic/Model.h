@@ -7,13 +7,13 @@
 
 namespace chess {
   namespace model {
-
-  struct Snapshot {
-      Position startPos;
-      CellData startData;
-      Position endPos;
-      CellData endData;
-  };
+    struct Snapshot {
+        std::vector<CellData> cells;
+        bool canWhiteCastlingLeft;
+        bool canWhiteCastlingRight;
+        bool canBlackCastlingLeft;
+        bool canBlackCastlingRight;
+    };
 
     class Model {
     public:
@@ -26,8 +26,10 @@ namespace chess {
       std::vector<Position> possibleMoves(const Position& position);
 
       bool isWhiteMove;
-      bool canCastlingLeft;
-      bool canCastlingRight;
+      bool canWhiteCastlingLeft;
+      bool canWhiteCastlingRight;
+      bool canBlackCastlingLeft;
+      bool canBlackCastlingRight;
 
       void print();
       void autoFill();
@@ -45,10 +47,14 @@ namespace chess {
       void insertQueenPossiblePositions(std::vector<Position>& result, const Position &position, Color ownColor);
       void insertKingPossiblePositions(std::vector<Position>& result, const Position &position, Color ownColor);
       void insertPosition(std::vector<Position>& result, Position position, int directionX, int directionY, Color ownColor);
-      void attemptCastling(const CellData& startData, const Position& startPos, const Position& endPos);
+    private:
+      bool attemptCastling(const Position& startPos, const Position& endPos, Color color);
+      bool attemptCastlingLeft(const Position& startPos, const Position& endPos, Color color);
+      bool attemptCastlingRight(const Position& startPos, const Position& endPos, Color color);
+      void castling(const Position& startPos, const Position& endPos, const Position& rookStartPos, const Position& rookEndPos, Color color);
+      Snapshot makeSnapshot();
     private:
       std::vector<CellData> mCells;
-
       std::stack<Snapshot> mSnapshots;
     };
   }

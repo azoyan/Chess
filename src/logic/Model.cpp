@@ -7,8 +7,10 @@ namespace chess {
   namespace model {
     Model::Model()
     : isWhiteMove(true)
-    , canCastlingLeft(true)
-    , canCastlingRight(true)
+    , canWhiteCastlingLeft(true)
+    , canWhiteCastlingRight(true)
+    , canBlackCastlingLeft(true)
+    , canBlackCastlingRight(true)
     {
       autoFill();
     }
@@ -31,17 +33,25 @@ namespace chess {
       std::vector<Position> positions = possibleMoves(startPos);
       for (auto i : positions) {
         if (i == endPos) {
-
-      // xor. Если фигура белая и ход белых, или если черная и не ход белых
-          if ((startCellData.color() == White) == isWhiteMove) {
-            if (startCellData.piece() != Less) {
-
-              attemptCastling(startCellData, startPos, endPos);
-
+          Piece piece = startCellData.piece();
+          if (piece != Less) {
+            Color color = startCellData.color();
+            if ((color == White) == isWhiteMove) {
+              mSnapshots.push(makeSnapshot());
+              if (piece == King) {
+                if (!attemptCastling(startPos, endPos, color)) {
+                  if (isWhiteMove) canWhiteCastlingLeft = canWhiteCastlingRight = false;
+                  else             canBlackCastlingLeft = canBlackCastlingRight = false;
+                }
+              }
+              if (piece == Rook) {
+                if (startPos.x == A && startPos.y == One)   canWhiteCastlingLeft  = false;
+                if (startPos.x == H && startPos.y == One)   canWhiteCastlingRight = false;
+                if (startPos.x == A && startPos.y == Eight) canBlackCastlingLeft  = false;
+                if (startPos.x == H && startPos.y == Eight) canBlackCastlingRight = false;
+              }
               place(startCellData, endPos);
               place(CellData(), startPos);
-              if (startCellData.piece() == Rook && startPos == Position(H, Eight)) canCastlingLeft = false;
-              mSnapshots.push({startPos, startCellData, endPos, endCellData});
               isWhiteMove = !isWhiteMove;
             }
           }
@@ -50,9 +60,11 @@ namespace chess {
     }
     void Model::undo() {
       if (!mSnapshots.empty()) {
-        Snapshot s = mSnapshots.top();
-        place(s.startData, s.startPos);
-        place(s.endData, s.endPos);
+        mCells = mSnapshots.top().cells;
+        canWhiteCastlingLeft  = mSnapshots.top().canWhiteCastlingLeft;
+        canWhiteCastlingRight = mSnapshots.top().canWhiteCastlingRight;
+        canBlackCastlingLeft  = mSnapshots.top().canBlackCastlingLeft;
+        canBlackCastlingRight = mSnapshots.top().canBlackCastlingRight;
         mSnapshots.pop();
         isWhiteMove = !isWhiteMove;
       }
@@ -105,7 +117,6 @@ namespace chess {
     void Model::print() {
       int num = 1;
       for (int i = 0; i < Total; ++i) {
-        if (0 == i % Width) printf("\n %d | ", num++);
           if (i < getCells().size()) {
               model::CellData ch = getCells().at(i);
               printf("%d%d ", ch.piece(), ch.color());
@@ -197,14 +208,29 @@ namespace chess {
       ,Position(position.x - 1, position.y - 1)
       };
 
-
-      Position castlingRight(position.x + 2, position.y);
-      Position castlingLeft(position.x - 2, position.y);
-      if (canCastlingRight && cellDataFrom(Position(position.x + 2, position.y)).piece() == Less) {
-        result.push_back(castlingRight);
+      Position castlingRight1(position.x + 1, position.y);
+      Position castlingRight2(position.x + 2, position.y);
+      Position castlingRight3(position.x + 3, position.y);
+      if (cellDataFrom(castlingRight1).piece() == Less &&
+          cellDataFrom(castlingRight2).piece() == Less &&
+          cellDataFrom(castlingRight3).piece() == Rook) {
+        if (canWhiteCastlingRight && ownColor == White ||
+            canBlackCastlingRight && ownColor == Black) {
+          result.push_back(castlingRight2);
+        }
       }
-      if (canCastlingLeft && cellDataFrom(Position(position.x - 2, position.y)).piece() == Less) {
-        result.push_back(castlingLeft);
+      Position castlingLeft1(position.x - 1, position.y);
+      Position castlingLeft2(position.x - 2, position.y);
+      Position castlingLeft3(position.x - 3, position.y);
+      Position castlingLeft4(position.x - 4, position.y);
+      if (cellDataFrom(castlingLeft1).piece() == Less &&
+          cellDataFrom(castlingLeft2).piece() == Less &&
+          cellDataFrom(castlingLeft3).piece() == Less &&
+          cellDataFrom(castlingLeft4).piece() == Rook) {
+        if (canWhiteCastlingLeft && ownColor == White ||
+            canBlackCastlingLeft && ownColor == Black) {
+          result.push_back(castlingLeft2);
+        }
       }
 
       for (auto i : positions) {
@@ -227,8 +253,69 @@ namespace chess {
       }
     }
 
-    void Model::attemptCastling(const CellData &startData, const Position &startPos, const Position &endPos) {
+    bool Model::attemptCastling(const Position &startPos, const Position &endPos, Color color) {
+      bool ok = false;
+      printf("startPosX: %d, endPosX: %d\n", startPos.x, endPos.x);
+      if (endPos.x < startPos.x) {
+        if ((canWhiteCastlingLeft && color == White) ||
+            (canBlackCastlingLeft && color == Black)) {
+          ok = attemptCastlingLeft(startPos, endPos, color);
+        }
+      }
+      if (endPos.x > startPos.x) {
+        if ((canWhiteCastlingRight && color == White) ||
+          (canBlackCastlingRight && color == Black) &&
+          (endPos.x > startPos.x)) {
+        ok = attemptCastlingRight(startPos, endPos, color);
+        }
+      }
+      return ok;
+    }
 
+    bool Model::attemptCastlingLeft(const Position &startPos, const Position &endPos, Color color) {
+      Position rookStartPos(startPos.x - 4, startPos.y);
+      Position rookEndPos(startPos.x - 1, startPos.y);
+      bool canCastling =
+              (Less == cellDataFrom(rookEndPos).piece())      &&
+              (Less == cellDataFrom(startPos.x - 2, startPos.y).piece()) &&
+              (Less == cellDataFrom(startPos.x - 3, startPos.y).piece()) &&
+              (Rook == cellDataFrom(rookStartPos).piece());
+      if (canCastling) castling(startPos, endPos, rookStartPos, rookEndPos, color);
+      return canCastling;
+    }
+
+    bool Model::attemptCastlingRight(const Position& startPos, const Position& endPos, Color color) {
+      Position rookStartPos(startPos.x + 3, startPos.y);
+      Position rookEndPos(startPos.x + 1, startPos.y);
+
+      bool canCastling = (cellDataFrom(rookStartPos).piece() == Rook) &&
+                         (cellDataFrom(rookEndPos).piece()   == Less) &&
+           (cellDataFrom(startPos.x + 2, startPos.y).piece() == Less);
+      printf("endPosX: %d\n", rookEndPos.x);
+      if (canCastling) castling(startPos, endPos, rookStartPos, rookEndPos, color);
+      return canCastling;
+    }
+
+    void Model::castling(const Position& startPos, const Position& endPos, const Position& rookStartPos, const Position& rookEndPos, Color color) {
+      CellData rook(Rook, color);
+      CellData king(King, color);
+      place(king, endPos);
+      place(CellData(), startPos);
+
+      place(rook, rookEndPos);
+      place(CellData(), rookStartPos);
+
+      if (color == White) canWhiteCastlingRight = canWhiteCastlingRight = false;
+      if (color == Black) canBlackCastlingRight = canBlackCastlingRight = false;
+    }
+
+    Snapshot Model::makeSnapshot() {
+        return { mCells,
+                 canWhiteCastlingLeft,
+                 canWhiteCastlingRight,
+                 canBlackCastlingLeft,
+                 canBlackCastlingRight
+               };
     }
 
     const std::vector<CellData> Model::getCells() const {

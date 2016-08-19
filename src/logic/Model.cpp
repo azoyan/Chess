@@ -38,6 +38,7 @@ namespace chess {
             Color color = startCellData.color();
             if ((color == White) == isWhiteMove) {
               mSnapshots.push(makeSnapshot());
+             // clearEnpassants();
               if (piece == King) {
                 if (!attemptCastling(startPos, endPos, color)) {
                   if (isWhiteMove) canWhiteCastlingLeft = canWhiteCastlingRight = false;
@@ -49,6 +50,25 @@ namespace chess {
                 if (startPos.x == H && startPos.y == One)   canWhiteCastlingRight = false;
                 if (startPos.x == A && startPos.y == Eight) canBlackCastlingLeft  = false;
                 if (startPos.x == H && startPos.y == Eight) canBlackCastlingRight = false;
+              }
+              if (piece == Pawn) {
+                bool isTwoSteps = (endPos.y - startPos.y) % 2 == 0;
+                int direction = (endPos.y - startPos.y) < 0 ? 1 : -1;
+                if (!mEnpassants.empty()) {
+                  printf("1endPos: %d %d, endEnpassant: %d %d\n", endPos.x, endPos.y, mEnpassants.top().endEnpassant.x, mEnpassants.top().endEnpassant.y);
+                  if (endPos == mEnpassants.top().endEnpassant) {
+                    place(CellData(), mEnpassants.top().endPos);
+                  }
+                }
+                if (isTwoSteps) {
+                  Position endEnpassant(endPos.x, endPos.y + direction * 1);
+                  clearEnpassants();
+                  if ((cellDataFrom(endPos.x + 1, endPos.y).piece() == Pawn) ||
+                      (cellDataFrom(endPos.x - 1, endPos.y).piece() == Pawn)) {
+                    addEnpassant(endEnpassant, endPos);
+                    printf("0endPos: %d %d, endEnpassant: %d %d\n", endPos.x, endPos.y, endEnpassant.x, endEnpassant.y);
+                  }
+                }
               }
               place(startCellData, endPos);
               place(CellData(), startPos);
@@ -112,6 +132,7 @@ namespace chess {
       isWhiteMove = true;
       mCells.clear();
       mCells.resize(Total);
+      while(!mSnapshots.empty()) mSnapshots.pop();
     }
 
     void Model::print() {
@@ -141,23 +162,43 @@ namespace chess {
       Position oneStepForward = Position(position.x, position.y + direction * 1);
       if (cellDataFrom(oneStepForward).color() == None) {
         result.push_back(oneStepForward);
-        bool firstPawnMove = position.y == Two || position.y == Seven;
+        bool canTwoStep = position.y == Two || position.y == Seven;
         Position twoStepForward = Position(position.x, position.y + direction * 2);
-        if (firstPawnMove && cellDataFrom(twoStepForward).color() == None) {
+        if (canTwoStep && cellDataFrom(twoStepForward).color() == None) {
           result.push_back(twoStepForward);
         }
       }
 
-      Position rightEnemyPos(position.x + direction * 1, position.y + direction * 1);
-      CellData rightEnemy = cellDataFrom(rightEnemyPos);
-      if (rightEnemy.color() != ownColor && rightEnemy.color() != None) {
-        result.push_back(rightEnemyPos);
+      Position rightEnemyPos(position.x + direction * 1, position.y + direction * 1);      
+      Position leftEnemyPos (position.x - direction * 1, position.y + direction * 1);
+
+      insertPawnEnemyPosition(result, rightEnemyPos, ownColor);
+      insertPawnEnemyPosition(result, leftEnemyPos, ownColor);
+
+      if (!mEnpassants.empty()) {
+        Position enpassantRight(position.x + 1, position.y + direction * 1);
+        Position enpassantLeft (position.x - 1, position.y + direction * 1);
+        Position endEnpassant = mEnpassants.top().endEnpassant;
+        if (enpassantLeft == endEnpassant || enpassantRight == endEnpassant) {
+          if (ownColor != cellDataFrom(mEnpassants.top().endPos).color()) {
+            result.push_back(mEnpassants.top().endEnpassant);
+          }
+        }
       }
-      Position leftEnemyPos(position.x - direction * 1, position.y + direction * 1);
-      CellData leftEnemy = cellDataFrom(leftEnemyPos);
-      if (leftEnemy.color() != ownColor && leftEnemy.color() != None) {
-        result.push_back(leftEnemyPos);
-      }
+    }
+
+    void Model::insertPawnEnemyPosition(std::vector<Position>& result, const Position& pos, Color own) {
+        CellData enemy = cellDataFrom(pos);
+        if (enemy.color() != own && enemy.color() != None) result.push_back(pos);
+
+    }
+
+    void Model::addEnpassant(const Position& endEnpassant, const Position &endPos) {
+        mEnpassants.push({endEnpassant, endPos});
+    }
+
+    void Model::clearEnpassants() {
+      while (!mEnpassants.empty()) mEnpassants.pop();
     }
 
     void Model::insertKnightPossiblePositions(std::vector<Position> &result, const Position &position, Color ownColor) {

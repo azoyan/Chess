@@ -15,6 +15,8 @@ namespace chess {
         bool canBlackCastlingRight;
     };
 
+    struct Enpassant { Position endEnpassant; Position endPos; };
+
     class Model {
     public:
       Model();
@@ -41,6 +43,7 @@ namespace chess {
       CellData cellDataFrom(int x, int y) const;
     private:
       void insertPawnPossiblePositions(std::vector<Position>& result, const Position &position, Color ownColor);
+      void insertPawnEnemyPosition(std::vector<Position>& result, const Position& pos, Color own);
       void insertKnightPossiblePositions(std::vector<Position>& result, const Position &position, Color ownColor);
       void insertBishopPossiblePositions(std::vector<Position>& result, const Position &position, Color ownColor);
       void insertRookPossiblePositions(std::vector<Position>& result, const Position &position, Color ownColor);
@@ -54,8 +57,12 @@ namespace chess {
       void castling(const Position& startPos, const Position& endPos, const Position& rookStartPos, const Position& rookEndPos, Color color);
       Snapshot makeSnapshot();
     private:
+      void addEnpassant(const Position& endEnpassant, const Position& endPos);
+      void clearEnpassants();
+    private:
       std::vector<CellData> mCells;
       std::stack<Snapshot> mSnapshots;
+      std::stack<Enpassant> mEnpassants;
     };
   }
 }

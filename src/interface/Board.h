@@ -43,6 +43,7 @@ private:
     oxygine::Resources* mResources;
     oxygine::spSprite mView;
     std::vector<oxygine::spSprite> pieces;
+    void showLastMove(oxygine::Vector2 startPos, oxygine::Vector2 endPos);
   };
 }
 

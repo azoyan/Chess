@@ -63,6 +63,8 @@ namespace chess {
       std::vector<CellData> mCells;
       std::stack<Snapshot> mSnapshots;
       std::stack<Enpassant> mEnpassants;
+      Position whiteKingPositioin;
+      Position blackKingPositioin;
     };
   }
 }

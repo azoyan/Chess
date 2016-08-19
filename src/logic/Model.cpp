@@ -55,7 +55,6 @@ namespace chess {
                 bool isTwoSteps = (endPos.y - startPos.y) % 2 == 0;
                 int direction = (endPos.y - startPos.y) < 0 ? 1 : -1;
                 if (!mEnpassants.empty()) {
-                  printf("1endPos: %d %d, endEnpassant: %d %d\n", endPos.x, endPos.y, mEnpassants.top().endEnpassant.x, mEnpassants.top().endEnpassant.y);
                   if (endPos == mEnpassants.top().endEnpassant) {
                     place(CellData(), mEnpassants.top().endPos);
                   }
@@ -90,10 +89,11 @@ namespace chess {
       }
     }
 
-    std::vector<Position> Model::possibleMoves(const Position& position) {
+    std::vector<Position> Model::possibleMoves(const Position& position) {        
       std::vector<Position> result;
       CellData chessman = cellDataFrom(position);
       Color ownColor = chessman.color();
+
       if (ownColor == White && !isWhiteMove || ownColor == Black && isWhiteMove) return result;
       switch (chessman.piece()) {
       case Pawn   :insertPawnPossiblePositions  (result, position, ownColor) ;break;
@@ -366,5 +366,6 @@ namespace chess {
     int Model::to1d(const Position& pos) const {
       return pos.x + Height * pos.y;
     }
+
   }
 }

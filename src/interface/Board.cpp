@@ -59,6 +59,7 @@ namespace chess {
           createPiece(piece, i);
           piece->setName("piece");
 
+
           piece->attachTo(mView);
         }        
      }
@@ -79,14 +80,7 @@ namespace chess {
                     || current == model::Black && !isWhiteMove;
 
     piece->drag.setDragEnabled(isDraggable);
-
-    if (isDraggable) {
-      spTweenQueue tweenQueue = new TweenQueue();
-      tweenQueue->add(Sprite::TweenRotationDegrees(-1), 100, 1, true);
-      tweenQueue->add(Sprite::TweenRotationDegrees( 1), 100, 1, true);
-      tweenQueue->setLoops(-1);
-      piece->addTween(tweenQueue);
-    }
+    piece->setPriority(254);
   }
 
   void Board::colorizeCells() {
@@ -123,10 +117,32 @@ namespace chess {
     actor->setPosition(alignToGrid(actor->getPosition()));
     actor->setScale(1);
 
+
     model::Position start = extractPosition(mStartPos);
     model::Position end   = extractPosition(actor->getPosition());
     mModel->move(start, end);
-    createChessmans();    
+    createChessmans();
+
+
+    mView->removeChild(mView->getChild("lastMove1"));
+    mView->removeChild(mView->getChild("lastMove2"));
+
+    spColorRectSprite lastMoveSprite1 = new ColorRectSprite();
+    lastMoveSprite1->setColor(Color::GreenYellow);
+    lastMoveSprite1->setAlpha(164);
+    lastMoveSprite1->setSize(actor->getSize());
+    lastMoveSprite1->setPosition(mStartPos);
+    lastMoveSprite1->setName("lastMove1");
+    mView->addChild(lastMoveSprite1);
+
+    spColorRectSprite lastMoveSprite2 = new ColorRectSprite();
+    lastMoveSprite2->setColor(Color::Green);
+    lastMoveSprite2->setAlpha(128);
+    lastMoveSprite2->setSize(actor->getSize());
+    lastMoveSprite2->setPosition(actor->getPosition());
+    lastMoveSprite2->setName("lastMove2");
+
+    mView->addChild(lastMoveSprite2);
 
     while(mView->getChild("highlight").get() != nullptr) {
       mView->removeChild(mView->getChild("highlight"));
@@ -136,22 +152,22 @@ namespace chess {
   void Board::onMouseDown(Event* event) {
     spActor actor = safeSpCast<Actor>(event->currentTarget);
     mStartPos  = actor->getPosition();
+
+
+
     std::vector<model::Position> highlights = mModel->possibleMoves(extractPosition(mStartPos));
     if (!highlights.empty()) {
-      //spTween tween = actor->addTween(Sprite::TweenColor(Color::LightGreen), 500, -1, true);
       actor->setScale(1.1);
-      //tween->setName("color");
     }
 
     for (auto i : highlights) {
       spSprite highlight = new ColorRectSprite();
       highlight->setSize(actor->getWidth(), actor->getHeight());
-      highlight->setColor(Color::LightGreen);
+      highlight->setColor(Color::BlueViolet);
       highlight->setPosition(extractCoordinate(i).x
                             ,extractCoordinate(i).y);
       highlight->setAlpha(96);
-      highlight->setName("highlight");
-      spTween tween = highlight->addTween(Sprite::TweenColor(Color::Green), 2500, -1, true);
+      highlight->setName("highlight");      
       highlight->attachTo(mView);
     }
   }
@@ -184,7 +200,11 @@ namespace chess {
   }
 
   double Board::halfCellWidth() {
-    return cellWidth() / 2.0;
+      return cellWidth() / 2.0;
+  }
+
+  void Board::showLastMove(Vector2 startPos, Vector2 endPos) {
+
   }
 
   model::Position Board::extractPosition(const Vector2& position) {

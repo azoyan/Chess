@@ -10,7 +10,7 @@ namespace chess {
     enum Rows { Eight, Seven, Six, Five, Four, Three, Two, One };
 
     struct Position {
-      Position(int x, int y) : x(x), y(y) { }
+      Position(int x = 0, int y = 0) : x(x), y(y) { }
       bool operator==(const Position& p) const {
           return (x == p.x && y == p.y);
       }

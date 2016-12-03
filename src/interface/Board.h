@@ -9,11 +9,13 @@ namespace chess {
 class PieceSprite : public oxygine::Sprite {
 public:
   PieceSprite() { drag.init(this); }
-   oxygine::Draggable drag;
+  PieceSprite(model::Piece piece, model::Color color) : mPiece(piece), mColor(color) { drag.init(this); }
+  oxygine::Draggable drag;
   model::Color getPieceColor() const { return mColor; }
   void setPieceColor(model::Color color) { mColor = color; }
-private:
+public:
   model::Color mColor;
+  model::Piece mPiece;
 };
 
   class Board : public oxygine::Actor {
@@ -44,6 +46,11 @@ private:
     oxygine::spSprite mView;
     std::vector<oxygine::spSprite> pieces;
     void showLastMove(oxygine::Vector2 startPos, oxygine::Vector2 endPos);
+    void showPromotionMenu();
+    void choose(oxygine::Event* event);
+    void highlightLastMove(model::Position start, model::Position end);
+    void checkSlatecheck();
+    bool mWaitNextClick;
   };
 }
 

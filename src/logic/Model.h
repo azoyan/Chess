@@ -4,6 +4,7 @@
 #include <vector>
 #include "CellData.h"
 #include <stack>
+#include <list>
 
 namespace chess {
   namespace model {
@@ -19,6 +20,7 @@ namespace chess {
 
     class Model {
     public:
+      using Positions = std::vector<Position>;
       Model();
     public:
       void place(const CellData& chessman, const Position& pos);
@@ -33,38 +35,48 @@ namespace chess {
       bool canBlackCastlingLeft;
       bool canBlackCastlingRight;
 
-      void print();
+      void print() const;
       void autoFill();
       void clear();
-      int to1d(const Position& pos) const;
+      static int to1d(const Position& pos);
       const std::vector<CellData> getCells() const;
+      bool isPromotion();
+      bool isCheckmate();
+      void setPromotionPiece(Piece piece);
     private:
       CellData cellDataFrom(const Position& position) const;
       CellData cellDataFrom(int x, int y) const;
     private:
-      void insertPawnPossiblePositions(std::vector<Position>& result, const Position &position, Color ownColor);
-      void insertPawnEnemyPosition(std::vector<Position>& result, const Position& pos, Color own);
-      void insertKnightPossiblePositions(std::vector<Position>& result, const Position &position, Color ownColor);
-      void insertBishopPossiblePositions(std::vector<Position>& result, const Position &position, Color ownColor);
-      void insertRookPossiblePositions(std::vector<Position>& result, const Position &position, Color ownColor);
-      void insertQueenPossiblePositions(std::vector<Position>& result, const Position &position, Color ownColor);
-      void insertKingPossiblePositions(std::vector<Position>& result, const Position &position, Color ownColor);
-      void insertPosition(std::vector<Position>& result, Position position, int directionX, int directionY, Color ownColor);
+      Positions extractPossiblePositions(const Position& position, Piece piece, Color color);
+      Positions extractPawnPossiblePositions(const Position &position, Color ownColor);
+      Positions extractPawnEnemyPosition(const Position& pos, Color own) const;
+      Positions extractKnightPossiblePositions(const Position &position, Color ownColor) const;
+      Positions extractBishopPossiblePositions(const Position &position, Color ownColor);
+      Positions extractRookPossiblePositions(const Position &position, Color ownColor);
+      Positions extractQueenPossiblePositions(const Position &position, Color ownColor);
+      Positions extractKingPossiblePositions(const Position &position, Color ownColor) const;
+      Positions extractPositionsByDirection(Position position, int directionX, int directionY, Color ownColor) const;
     private:
       bool attemptCastling(const Position& startPos, const Position& endPos, Color color);
       bool attemptCastlingLeft(const Position& startPos, const Position& endPos, Color color);
       bool attemptCastlingRight(const Position& startPos, const Position& endPos, Color color);
       void castling(const Position& startPos, const Position& endPos, const Position& rookStartPos, const Position& rookEndPos, Color color);
-      Snapshot makeSnapshot();
+      Snapshot makeSnapshot() const;
     private:
       void addEnpassant(const Position& endEnpassant, const Position& endPos);
       void clearEnpassants();
+      Color currentColor() const;
+      static Positions filtOutsides(const std::vector<Position>& positions);
+      Positions filtIllegals(const Positions& positions, const Position& position, CellData chessman);
+      bool isKingUnderCheck(const Position& startPos, const Position& endPos, CellData chessman);
+      bool mIsPromotion;
     private:
       std::vector<CellData> mCells;
-      std::stack<Snapshot> mSnapshots;
+      std::list<Snapshot> mSnapshots;
       std::stack<Enpassant> mEnpassants;
       Position whiteKingPositioin;
       Position blackKingPositioin;
+      Position mPromotionPosition;
     };
   }
 }

@@ -3,31 +3,18 @@
 #include "oxygine-framework.h"
 
 #include "../logic/Model.h"
-
+#include "PieceSprite.h"
 
 namespace chess {
-class PieceSprite : public oxygine::Sprite {
-public:
-  PieceSprite() { drag.init(this); }
-  PieceSprite(model::Piece piece, model::Color color) : mPiece(piece), mColor(color) { drag.init(this); }
-  oxygine::Draggable drag;
-  model::Color getPieceColor() const { return mColor; }
-  void setPieceColor(model::Color color) { mColor = color; }
-public:
-  model::Color mColor;
-  model::Piece mPiece;
-};
-
   class Board : public oxygine::Actor {
   public:
     Board();
     void free();
     oxygine::spActor getView();
-
   private:
     void colorizeCells();
     void createChessmans();
-    void createPiece(oxygine::intrusive_ptr<PieceSprite> piece, int position);
+    void placeChessman(oxygine::intrusive_ptr<PieceSprite> piece, int position);
 
     void onMouseUp(oxygine::Event* event);
     void onMouseDown(oxygine::Event* event);

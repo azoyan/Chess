@@ -8,6 +8,7 @@
 #include "SDL.h"
 #include "SDL_keyboard.h"
 
+
 using namespace oxygine;
 
 namespace chess {
@@ -16,12 +17,11 @@ namespace chess {
   , mModel    (new model::Model)
   , mResources(new Resources())
   , mWaitNextClick(false)
-  {
-    mResources->loadXML("data/resources.xml");
+  {    
     mView->setSize(getStage()->getWidth() / 2, getStage()->getWidth() / 2);
     mView->setColor(Color::Tan);
     mView->setTouchEnabled(false, true);
-    //    mView->setRotationDegrees(45);
+    mResources->loadXML("data/resources.xml");
     mView->setAnchor(0.5f, 0.5f);
     oxygine::core::getDispatcher()->addEventListener(oxygine::core::EVENT_SYSTEM
                                                      ,CLOSURE(this, &Board::onEvent));
@@ -31,42 +31,26 @@ namespace chess {
   }
 
   void Board::createChessmans() {
-    cleanBoard();
-    model::Color color;
+    cleanBoard();    
     for (int i = 0; i < mModel->getCells().size(); ++i) {
       using namespace model;
-      int row = -1;
-      switch (mModel->getCells().at(i).color()) {
-      case White: row = 1; color = White; break;
-      case Black: row = 0; color = Black; break;
-      }
-      int column = -1;
-      switch(mModel->getCells().at(i).piece()) {
-      case Pawn:   column = 5; break;
-      case Knight: column = 3; break;
-      case Bishop: column = 4; break;
-      case Rook:   column = 2; break;
-      case Queen:  column = 1; break;
-      case King:   column = 0; break;
-      }
-      if ((row >= 0 && column >= 0)) {
-        intrusive_ptr<PieceSprite> piece = new PieceSprite(mModel->getCells().at(i).piece(), mModel->getCells().at(i).color());
-
-        piece->addEventListener(TouchEvent::TOUCH_DOWN ,CLOSURE(this, &Board::onMouseDown));
-        piece->addEventListener(TouchEvent::TOUCH_UP   ,CLOSURE(this, &Board::onMouseUp));
-        pieces.push_back(piece);
-        piece->setResAnim(mResources->getResAnim("pieces"), column, row);
-        piece->setSize(cellWidth(), cellWidth());
-        piece->setTouchEnabled(true);
-        piece->setPieceColor(color);
-        createPiece(piece, i); //rename to "placePiece"
-        piece->setName("piece");
-        piece->attachTo(mView);
+      auto piece = mModel->getCells().at(i).piece();
+      auto color = mModel->getCells().at(i).color();
+      if (color != model::Color::None && piece != model::Piece::None) {
+        intrusive_ptr<PieceSprite> chessman = new PieceSprite(mResources, piece, color);
+        chessman->addEventListener(TouchEvent::TOUCH_DOWN ,CLOSURE(this, &Board::onMouseDown));
+        chessman->addEventListener(TouchEvent::TOUCH_UP   ,CLOSURE(this, &Board::onMouseUp));
+        pieces.push_back(chessman);
+        chessman->setSize(cellWidth(), cellWidth());
+        chessman->setTouchEnabled(true);
+        placeChessman(chessman, i); //rename to "placePiece"
+        chessman->setName("piece");
+        chessman->attachTo(mView);
       }
     }
   }
 
-  void Board::createPiece(intrusive_ptr<PieceSprite> piece, int position) {
+  void Board::placeChessman(intrusive_ptr<PieceSprite> piece, int position) {
     double offsetX = position % model::Width;
     double offsetY = position / model::Height;
     double width  = halfCellWidth() + piece->getWidth()  * offsetX;
@@ -76,8 +60,8 @@ namespace chess {
     bool isWhiteMove = mModel->isWhiteMove;
     model::Color current = piece->getPieceColor();
 
-    bool isDraggable = current == model::White && isWhiteMove
-                       || current == model::Black && !isWhiteMove;
+    bool isDraggable = current == model::Color::White && isWhiteMove
+                    || current == model::Color::Black && !isWhiteMove;
 
     piece->drag.setDragEnabled(isDraggable);
     piece->setAnchor(0.5f, 0.5f);
@@ -94,7 +78,7 @@ namespace chess {
         double posX = halfCellWidth() + blackCell->getWidth()  * i;
         double posY = halfCellWidth() + blackCell->getHeight() * j;
 
-        if (black && (i % model::Black)) {
+        if (black && (i % 2)) {
           posY += blackCell->getHeight();
           black = !black;
         }
@@ -119,31 +103,29 @@ namespace chess {
     actor->setScale(1);
     actor->setPosition(alignToGrid(actor->getPosition()));
 
+    printf("MOUSE UP");
     model::Position start = extractPosition(mStartPos);
     model::Position end   = extractPosition(actor->getPosition());
 
-    if (!mWaitNextClick && start == end) {
-      mWaitNextClick = true;
-      return;
-    }
-    else {
+//    if (!mWaitNextClick && start == end) {
+//      mWaitNextClick = true;
+////      return;
+//    }
+//    else {
       mModel->move(start, end);
       if (mModel->isPromotion()) showPromotionMenu();
       createChessmans();
       highlightLastMove((start), (end));
       checkSlatecheck();
       mWaitNextClick = false;
-    }
-
-
-
+//    }
   }
 
   void Board::onMouseDown(Event* event) {
-    spActor actor = safeSpCast<Actor>(event->currentTarget);
+    intrusive_ptr<PieceSprite> actor = safeSpCast<PieceSprite>(event->currentTarget);
     mStartPos  = actor->getPosition();
     std::vector<model::Position> highlights = mModel->possibleMoves(extractPosition(mStartPos));
-
+    printf("MOUSE DOWN");
     if (!highlights.empty()) {
       actor->setScale(1.1);
     }
@@ -171,7 +153,6 @@ namespace chess {
       }
       createChessmans();
     }
-//    showPromotionMenu();
   }
 
   Vector2 Board::alignToGrid(Vector2 position) {
@@ -184,10 +165,7 @@ namespace chess {
   void Board::cleanBoard() {
     for (auto i : pieces) mView->removeChild(mView->getChild("piece"));
     pieces.clear();
-
-
-
-  }
+}
 
   double Board::cellWidth() {
     return mView->getWidth() / model::Width;
@@ -202,68 +180,53 @@ namespace chess {
   }
 
   void Board::showPromotionMenu() {
-
-
-
-
     spSprite promotionMenu = new ColorRectSprite();
     promotionMenu->setAlpha(225);
-    promotionMenu->setColor(Color::White);
-    promotionMenu->setSize(mView->getSize());
-    promotionMenu->setAnchor(mView->getAnchor());
+    promotionMenu->setColor   (Color::White);
+    promotionMenu->setSize    (mView->getSize());
+    promotionMenu->setAnchor  (mView->getAnchor());
     promotionMenu->setPosition(mView->getPosition());
-
-
-
 
     float height = promotionMenu->getPosition().y - promotionMenu->getHeight() / 3;
 
-    model::Color color = mModel->isWhiteMove ? model::White : model::Black;
-    int row = mModel->isWhiteMove ? 0 : 1;
+    model::Color color = mModel->isWhiteMove ? model::Color::Black : model::Color::White;
 
-    intrusive_ptr<PieceSprite> knight = new PieceSprite(model::Knight, color);
-    knight->setResAnim(mResources->getResAnim("pieces"), 1 + model::Knight, row);
+
+    intrusive_ptr<PieceSprite> knight = new PieceSprite(mResources, model::Piece::Knight, color, false);
+
     knight->setPosition(promotionMenu->getPosition().x - (promotionMenu->getWidth()  / 2 + knight->getWidth() * 2),
                         height);
 
     knight->addClickListener(CLOSURE(this, &Board::choose));
 
-    intrusive_ptr<PieceSprite> bishop = new PieceSprite(model::Bishop, color);
-    bishop->setResAnim(mResources->getResAnim("pieces"), 1 + model::Bishop, row);
+    intrusive_ptr<PieceSprite> bishop = new PieceSprite(mResources, model::Piece::Bishop, color, false);
+
     bishop->setPosition(promotionMenu->getPosition().x - promotionMenu->getWidth()  / 2 - bishop->getWidth(),
                         height);
 
     bishop->addClickListener(CLOSURE(this, &Board::choose));
 
-    intrusive_ptr<PieceSprite> rook = new PieceSprite(model::Rook, color);
-    rook->setResAnim(mResources->getResAnim("pieces"), 2, row);
+    intrusive_ptr<PieceSprite> rook = new PieceSprite(mResources, model::Piece::Rook, color, false);
+
     rook->setPosition(promotionMenu->getPosition().x - promotionMenu->getWidth()  / 2,
                         height);
 
     rook->addClickListener(CLOSURE(this, &Board::choose));
 
-    intrusive_ptr<PieceSprite> queen = new PieceSprite(model::Queen, color);
-    queen->setResAnim(mResources->getResAnim("pieces"), 1, row);
+    intrusive_ptr<PieceSprite> queen = new PieceSprite(mResources, model::Piece::Queen, color, false);
+
     queen->setPosition(promotionMenu->getPosition().x - promotionMenu->getWidth()  / 2 + queen->getWidth(),
                        height);
 
     queen->addClickListener(CLOSURE(this, &Board::choose));
-
-    knight->drag.setDragEnabled(false);
-    bishop->drag.setDragEnabled(false);
-    rook->drag.setDragEnabled(false);
-    queen->drag.setDragEnabled(false);
 
     promotionMenu->addChild(bishop);
     promotionMenu->addChild(knight);
     promotionMenu->addChild(queen);
     promotionMenu->addChild(rook);
 
-//    mModel->setPromotionPiece(model::Queen);
-//    mView->addChild(promotionMenu);
     promotionMenu->setName("promotion");
-    promotionMenu->attachTo(mView);
-//    mView->removeChild(mView->getChild("promotion"));
+    promotionMenu->attachTo(getStage());
   }
 
 void Board::choose(Event* event) {
@@ -274,8 +237,8 @@ void Board::choose(Event* event) {
 
 
   createChessmans();
-  while(mView->getChild("promotion").get() != nullptr) {
-    mView->removeChild(mView->getChild("promotion"));
+  while(getStage()->getChild("promotion").get() != nullptr) {
+    getStage()->removeChild(getStage()->getChild("promotion"));
   }
 
 }

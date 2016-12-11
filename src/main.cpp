@@ -52,8 +52,12 @@ void run()
 
 #if OXYGINE_SDL || OXYGINE_EMSCRIPTEN
     // The initial window size can be set up here on SDL builds
-    desc.w = 520;
-    desc.h = 520;
+    desc.w = 1024;
+    desc.h = 768;
+
+  //  desc.w = 520;
+    //desc.h = 520;
+
     // Marmalade settings can be modified from the emulator's menu
 #endif
 
@@ -68,7 +72,7 @@ void run()
     getStage()->setSize(size);
 
     // DebugActor is a helper actor node. It shows FPS, memory usage and other useful stuff
-    //DebugActor::show();
+    DebugActor::show();
 
 
     // Initializes our example game. See example.cpp

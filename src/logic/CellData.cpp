@@ -13,5 +13,9 @@ namespace chess {
     const Piece CellData::piece() const {
       return mPiece;
     }
+
+    void CellData::setPiece(Piece piece) {
+      mPiece = piece;
+    }
   }
 }

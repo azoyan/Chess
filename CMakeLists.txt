@@ -21,11 +21,13 @@ src/logic/CellData.h
 src/logic/Global.h
 src/logic/Model.cpp
 src/logic/CellData.cpp
+src/interface/PieceSprite.h
 
 src/interface/Board.h
 src/interface/Chess.h
 src/interface/Board.cpp
 src/interface/Chess.cpp
+src/interface/PieceSprite.cpp
 
 )
 target_link_libraries(Chess ${OXYGINE_CORE_LIBS})
